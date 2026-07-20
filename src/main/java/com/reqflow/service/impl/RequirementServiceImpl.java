@@ -36,8 +36,8 @@ public class RequirementServiceImpl implements RequirementService {
         existing.setDescription(reqDetails.getDescription());
         existing.setStatus(reqDetails.getStatus());
         existing.setPriority(reqDetails.getPriority());
-        existing.setPlannedEndDate(reqDetails.getPlannedEndDate());
-        existing.setActualEndDate(reqDetails.getActualEndDate());
+        existing.setStartDate(reqDetails.getStartDate()); // 支持开始时间变更
+        existing.setEndDate(reqDetails.getEndDate());     // 支持结束时间变更
         existing.setUpdatedAt(LocalDateTime.now());
 
         return requirementRepository.save(existing);

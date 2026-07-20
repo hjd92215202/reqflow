@@ -7,27 +7,25 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "req_requirement")
-public class Requirement {
+@Table(name = "req_stage")
+public class Stage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "requirement_id", nullable = false)
+    private Long requirementId;
+
     @Column(nullable = false)
     private String title;
 
-    private String description;
-    private String status;
-    private String priority;
-
     @Column(name = "start_date")
-    private LocalDate startDate; // 新增需求开始时间
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private LocalDate endDate;   // 新增需求结束时间
+    private LocalDate endDate;
 
-    @Column(name = "creator_id")
-    private Long creatorId;
+    private String status = "TODO";
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

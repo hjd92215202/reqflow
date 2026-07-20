@@ -14,8 +14,8 @@ public class DiscussionServiceImpl implements DiscussionService {
     private DiscussionRepository discussionRepository;
 
     @Override
-    public List<Discussion> getDiscussionsByRequirement(Long requirementId) {
-        return discussionRepository.findByRequirementIdOrderByCreatedAtAsc(requirementId);
+    public List<Discussion> getDiscussionsByRequirement(Long stageId) {
+        return discussionRepository.findByStageIdOrderByCreatedAtAsc(stageId); // 更改为按阶段ID查询
     }
 
     @Override

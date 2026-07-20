@@ -15,8 +15,8 @@ public class SubTaskServiceImpl implements SubTaskService {
     private SubTaskRepository subTaskRepository;
 
     @Override
-    public List<SubTask> getSubTasksByRequirement(Long requirementId) {
-        return subTaskRepository.findByRequirementIdOrderByIdAsc(requirementId);
+    public List<SubTask> getSubTasksByRequirement(Long stageId) {
+        return subTaskRepository.findByStageIdOrderByIdAsc(stageId); // 更改为按阶段ID查询
     }
 
     @Override

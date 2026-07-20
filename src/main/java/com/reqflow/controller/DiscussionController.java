@@ -14,9 +14,9 @@ public class DiscussionController {
     @Autowired
     private DiscussionService discussionService;
 
-    @GetMapping("/requirement/{reqId}")
-    public ResponseEntity<?> getByRequirement(@PathVariable Long reqId) {
-        return ResponseEntity.ok(discussionService.getDiscussionsByRequirement(reqId));
+    @GetMapping("/stage/{stageId}") // 语义化路径调整
+    public ResponseEntity<?> getByStage(@PathVariable Long stageId) {
+        return ResponseEntity.ok(discussionService.getDiscussionsByRequirement(stageId));
     }
 
     @PostMapping

@@ -12,8 +12,8 @@ public class Discussion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "requirement_id", nullable = false)
-    private Long requirementId;
+    @Column(name = "stage_id", nullable = false)
+    private Long stageId; // 变更为关联阶段ID
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -24,7 +24,6 @@ public class Discussion {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // 关联用户以获取发表人的昵称
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;

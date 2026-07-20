@@ -12,13 +12,13 @@ public class SubTask {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "requirement_id", nullable = false)
-    private Long requirementId;
+    @Column(name = "stage_id", nullable = false)
+    private Long stageId; // 变更为关联阶段ID
 
     @Column(nullable = false)
     private String title;
 
-    private String assignee; // 负责人
+    private String assignee;
 
     @Column(name = "is_completed")
     private Boolean isCompleted = false;
