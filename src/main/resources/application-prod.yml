@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://prod-db-ip:5432/req_tracker_prod # 生产数据库地址
+    username: prod_user                                     # 生产数据库用户名
+    password: your_prod_password                            # 生产数据库密码
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate             # 仅校验表结构是否匹配，绝不自动修改，防止数据意外丢失
+    show-sql: false                  # 关闭 SQL 打印，提高运行效率并保护敏感数据
