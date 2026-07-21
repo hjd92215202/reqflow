@@ -16,12 +16,12 @@ public class SubTaskServiceImpl implements SubTaskService {
 
     @Override
     public List<SubTask> getSubTasksByRequirement(Long stageId) {
-        return subTaskRepository.findByStageIdOrderByIdAsc(stageId); // 更改为按阶段ID查询
+        return subTaskRepository.findByStageIdOrderByIdAsc(stageId);
     }
 
     @Override
     public SubTask createSubTask(SubTask subTask) {
-        subTask.setIsCompleted(false);
+        if (subTask.getStatus() == null) subTask.setStatus("TODO");
         return subTaskRepository.save(subTask);
     }
 
@@ -31,7 +31,10 @@ public class SubTaskServiceImpl implements SubTaskService {
                 .orElseThrow(() -> new RuntimeException("SubTask not found"));
         existing.setTitle(subTaskDetails.getTitle());
         existing.setAssignee(subTaskDetails.getAssignee());
-        existing.setIsCompleted(subTaskDetails.getIsCompleted());
+        existing.setStatus(subTaskDetails.getStatus());
+        existing.setStartDate(subTaskDetails.getStartDate());
+        existing.setEndDate(subTaskDetails.getEndDate());
+        existing.setCustomFields(subTaskDetails.getCustomFields()); // 映射非结构化动态字段
         existing.setUpdatedAt(LocalDateTime.now());
         return subTaskRepository.save(existing);
     }
