@@ -7,7 +7,9 @@ import java.util.List;
 
 public interface DiscussionRepository extends JpaRepository<Discussion, Long> {
 
-    // 核心优化：利用 EntityGraph 强制联表抓取 user 信息，将 N+1 查询完美缩减为 1 次 SQL 查询
     @EntityGraph(attributePaths = {"user"})
     List<Discussion> findByStageIdOrderByCreatedAtAsc(Long stageId);
+
+    // 优化新增：级联删除阶段时一键清除所有跟进日志
+    void deleteByStageId(Long stageId);
 }

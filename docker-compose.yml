@@ -1,0 +1,36 @@
+
+services:
+  # 1. 数据库容器
+  reqflow-db:
+    image: postgres:15-alpine
+    container_name: reqflow-postgres
+    environment:
+      POSTGRES_USER: reqflow_user
+      POSTGRES_PASSWORD: reqflow_password
+      POSTGRES_DB: reqflow_db
+    volumes:
+      - reqflow-db-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432" #(宿主机端口:容器内端口)
+    restart: always
+
+  # 2. ReqFlow 后端容器
+  reqflow-backend:
+    build: .  # 首次启动时自动根据 Dockerfile 构建镜像
+    container_name: reqflow-backend
+    ports:
+      - "8090:8080"
+    environment:
+      # 这里的值会自动注入到 application-prod.yml 和 JwtUtil 中
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://reqflow-db:5432/reqflow_db
+      - SPRING_DATASOURCE_USERNAME=reqflow_user
+      - SPRING_DATASOURCE_PASSWORD=reqflow_password
+      # 提醒用户在部署时修改这个密钥
+      - JWT_SECRET=change_this_to_a_super_secure_random_string_for_production
+    depends_on:
+      - reqflow-db
+    restart: always
+
+# 声明持久化数据卷，防止数据库重启数据丢失
+volumes:
+  reqflow-db-data:
