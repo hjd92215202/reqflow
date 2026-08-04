@@ -9,4 +9,6 @@ public interface SubTaskRepository extends JpaRepository<SubTask, Long> {
 
     // 优化新增：级联删除阶段时一键清除所有子任务
     void deleteByStageId(Long stageId);
+
+    List<SubTask> findByParentId(Long parentId);
 }

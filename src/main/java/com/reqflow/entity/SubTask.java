@@ -11,7 +11,10 @@ import java.util.Map;
 
 @Data
 @Entity
-@Table(name = "req_sub_task")
+@Table(name = "req_sub_task", indexes = {
+        @Index(name = "idx_subtask_stage_id", columnList = "stage_id"),
+        @Index(name = "idx_subtask_parent_id", columnList = "parent_id")
+})
 public class SubTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

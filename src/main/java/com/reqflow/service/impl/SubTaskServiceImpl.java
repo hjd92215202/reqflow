@@ -46,6 +46,15 @@ public class SubTaskServiceImpl implements SubTaskService {
     @Override
     @Transactional
     public void deleteSubTask(Long id) {
+        // 1. 查找所有以当前任务为父节点的子任务
+        List<SubTask> children = subTaskRepository.findByParentId(id);
+
+        // 2. 递归深度优先清理子节点（确保整棵子树干净移除）
+        for (SubTask child : children) {
+            deleteSubTask(child.getId());
+        }
+
+        // 3. 删除节点本身
         subTaskRepository.deleteById(id);
     }
 }
