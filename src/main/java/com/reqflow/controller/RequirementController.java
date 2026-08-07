@@ -15,9 +15,12 @@ public class RequirementController {
     private RequirementService requirementService;
 
     @GetMapping
-    public ResponseEntity<?> getMyRequirements(HttpServletRequest request) {
+    public ResponseEntity<?> getMyRequirements(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
         var userId = (Long) request.getAttribute("userId");
-        return ResponseEntity.ok(requirementService.getRequirementsByCreator(userId));
+        return ResponseEntity.ok(requirementService.getRequirementsByCreator(userId, page, size));
     }
 
     @PostMapping

@@ -7,6 +7,9 @@ import com.reqflow.repository.SubTaskRepository;
 import com.reqflow.repository.DiscussionRepository;
 import com.reqflow.service.RequirementService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -29,9 +32,10 @@ public class RequirementServiceImpl implements RequirementService {
     private DiscussionRepository discussionRepository; // 优化引入：注入日志仓库用于多级级联删除
 
     @Override
-    @Transactional(readOnly = true) // 优化引入：只读事务优化，提升查询并发处理能力
-    public List<Requirement> getRequirementsByCreator(Long creatorId) {
-        return requirementRepository.findByCreatorIdOrderByIdDesc(creatorId);
+    @Transactional(readOnly = true)
+    public Page<Requirement> getRequirementsByCreator(Long creatorId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return requirementRepository.findByCreatorIdOrderByIdDesc(creatorId, pageable);
     }
 
     @Override
