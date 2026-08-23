@@ -49,6 +49,7 @@ public class TodoServiceImpl implements TodoService {
             dto.setId(t.getId());
             dto.setUserId(t.getUserId());
             dto.setTitle(t.getTitle());
+            dto.setDescription(t.getDescription());
             dto.setStatus(t.getStatus());
             dto.setPriority(t.getPriority());
             dto.setDueDate(t.getDueDate());
@@ -84,6 +85,7 @@ public class TodoServiceImpl implements TodoService {
                     dto.setId(st.getId());
                     dto.setUserId(userId);
                     dto.setTitle(st.getTitle());
+                    dto.setDescription(null);
                     dto.setStatus(st.getStatus());
                     dto.setPriority("MEDIUM");
                     dto.setDueDate(st.getEndDate());
@@ -140,6 +142,7 @@ public class TodoServiceImpl implements TodoService {
                 throw new RuntimeException("Permission denied");
             }
             existing.setTitle(dto.getTitle());
+            existing.setDescription(dto.getDescription());
             existing.setStatus(dto.getStatus());
             existing.setPriority(dto.getPriority());
             existing.setDueDate(dto.getDueDate());

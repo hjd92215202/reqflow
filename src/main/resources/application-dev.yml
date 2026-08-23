@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/req_tracker
+    url: jdbc:postgresql://47.100.71.34:5433/req_tracker
     username: postgres              # 替换为您本地数据库用户名
     password: 123     # 替换为您本地数据库密码
     driver-class-name: org.postgresql.Driver
