@@ -1,10 +1,7 @@
 package com.reqflow.service.impl;
 
 import com.reqflow.entity.Requirement;
-import com.reqflow.repository.RequirementRepository;
-import com.reqflow.repository.StageRepository;
-import com.reqflow.repository.SubTaskRepository;
-import com.reqflow.repository.DiscussionRepository;
+import com.reqflow.repository.*;
 import com.reqflow.service.RequirementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,6 +27,9 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Autowired
     private DiscussionRepository discussionRepository; // 优化引入：注入日志仓库用于多级级联删除
+
+    @Autowired
+    private WikiDocumentRepository wikiDocumentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -64,20 +64,18 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Override
     public void deleteRequirement(Long id) {
-        // 核心级联删除逻辑优化：
-        // 1. 获取该需求下关联的所有阶段列表
+        // 1. 清理需求阶段及子任务
         var stages = stageRepository.findByRequirementIdOrderByIdAsc(id);
-
-        // 2. 深度遍历，彻底清空每一个阶段下的“子任务”和“讨论日志”
         for (var stage : stages) {
             subTaskRepository.deleteByStageId(stage.getId());
             discussionRepository.deleteByStageId(stage.getId());
         }
-
-        // 3. 清空需求下的所有“阶段”数据
         stageRepository.deleteByRequirementId(id);
 
-        // 4. 最后安全删除主需求数据，全过程在一个事务中完成，异常时自动回滚
+        // 2. 级联删除关联的 Wiki 文档
+        wikiDocumentRepository.deleteByRequirementId(id);
+
+        // 3. 删除需求本身
         requirementRepository.deleteById(id);
     }
 }
