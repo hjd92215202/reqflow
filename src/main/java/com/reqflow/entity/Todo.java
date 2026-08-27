@@ -24,7 +24,7 @@ public class Todo {
     @Column(columnDefinition = "TEXT")
     private String description; // 详细内容 / 备注说明
 
-    private String status = "TODO"; // TODO (待办), DONE (已完成)
+    private String status = "IN_PROGRESS"; // TODO (待办), DONE (已完成)
 
     private String priority = "MEDIUM"; // LOW (低), MEDIUM (中), HIGH (高)
 

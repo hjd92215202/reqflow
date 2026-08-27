@@ -118,7 +118,7 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public Todo createPersonalTodo(Todo todo, Long userId) {
         todo.setUserId(userId);
-        if (todo.getStatus() == null) todo.setStatus("TODO");
+        if (todo.getStatus() == null) todo.setStatus("IN_PROGRESS");
         if (todo.getPriority() == null) todo.setPriority("MEDIUM");
         return todoRepository.save(todo);
     }
@@ -161,7 +161,7 @@ public class TodoServiceImpl implements TodoService {
         if (Boolean.TRUE.equals(isProjectTask)) {
             SubTask subTask = subTaskRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("SubTask not found"));
-            String newStatus = "DONE".equals(subTask.getStatus()) ? "TODO" : "DONE";
+            String newStatus = "DONE".equals(subTask.getStatus()) ? "IN_PROGRESS" : "DONE";
             subTask.setStatus(newStatus);
             subTask.setUpdatedAt(LocalDateTime.now());
             subTaskRepository.save(subTask);
