@@ -1,5 +1,6 @@
 package com.reqflow.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.reqflow.entity.WikiDocument;
 import com.reqflow.service.WikiDocumentService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,22 +16,18 @@ public class WikiDocumentController {
     @Autowired
     private WikiDocumentService wikiDocumentService;
 
-    // 1. 【核心修复】免鉴权公开 JSON 接口（供前端 WikiShareView.vue 页面异步调用）
-    @GetMapping("/api/wikis/share/{id}")
-    public ResponseEntity<?> getSharedWikiJsonById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(wikiDocumentService.getWikiDocumentById(id));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 2. 免鉴权 Web 纯 HTML 页面（浏览器直接直连后端时秒开）
+    // 1. 全端通用的 Web HTML 免登录只读分享页面 (安全模板替换引擎)
     @GetMapping(value = "/share/wiki/{id}", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
     @ResponseBody
     public String renderSharedWikiPage(@PathVariable Long id) {
         try {
             WikiDocument doc = wikiDocumentService.getWikiDocumentById(id);
+            if (doc == null) {
+                return "<h3 style='text-align:center;margin-top:50px;color:#999;'>未找到该分享文档或已被删除</h3>";
+            }
+
             String title = doc.getTitle() != null ? doc.getTitle() : "未命名文档";
             String author = doc.getCreatorNickname() != null ? doc.getCreatorNickname() : "管理员";
             String reqTitle = doc.getRequirementTitle() != null ? doc.getRequirementTitle() : "";
@@ -39,39 +36,42 @@ public class WikiDocumentController {
             if (updateTime.length() > 16) updateTime = updateTime.substring(0, 16);
             String rawContent = doc.getContent() != null ? doc.getContent() : "";
 
-            String jsonContent = rawContent
-                    .replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\r", "")
-                    .replace("\n", "\\n");
+            // 使用 Jackson 绝对安全地将正文转义为标准的 JS 字符串
+            String contentJson = objectMapper.writeValueAsString(rawContent);
 
-            return """
+            String reqHtml = reqTitle.isEmpty() ? "" : "<span class=\"tag tag-req\">📌 " + escapeHtml(reqTitle) + "</span>";
+            String tagHtml = tags.isEmpty() ? "" : "<span class=\"tag tag-warn\">🏷️ " + escapeHtml(tags) + "</span>";
+
+            String template = """
             <!DOCTYPE html>
             <html lang="zh-CN">
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>%s - ReqFlow Wiki</title>
+              <title>{{DOC_TITLE}} - ReqFlow Wiki</title>
               <style>
                 * { box-sizing: border-box; }
-                body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background-color: #fcfcfb; color: #37352f; line-height: 1.7; }
-                .share-header { height: 50px; background: #fff; border-bottom: 1px solid rgba(55,53,47,0.09); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; }
+                body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background-color: #fcfcfb; color: #37352f; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+                .share-header { height: 50px; background: #fff; border-bottom: 1px solid rgba(55,53,47,0.09); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
                 .share-brand { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-                .badge { font-size: 11px; background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 4px; }
-                .btn { background: #fff; border: 1px solid #dcdfe6; color: #606266; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+                .badge { font-size: 11px; background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 4px; font-weight: normal; }
+                .btn { background: #fff; border: 1px solid #dcdfe6; color: #606266; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.15s; }
                 .btn:hover { color: #2383e2; border-color: #c6e2ff; background: #ecf5ff; }
                 .main-card { max-width: 880px; margin: 32px auto 80px auto; background: #fff; padding: 40px 48px; border-radius: 8px; border: 1px solid rgba(55,53,47,0.08); box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
                 .article-title { margin: 0 0 16px 0; font-size: 28px; font-weight: 700; line-height: 1.3; }
                 .meta-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #8c8c8c; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px; margin-bottom: 24px; }
                 .meta-left { display: flex; gap: 16px; }
+                .meta-right { display: flex; gap: 8px; }
                 .tag { font-size: 11px; padding: 2px 8px; border-radius: 3px; }
                 .tag-req { background: #e0f0ff; color: #0f73da; }
                 .tag-warn { background: #fdecc8; color: #b36b00; }
+                /* Markdown 渲染样式 */
                 .markdown-body h1 { font-size: 22px; font-weight: 700; margin: 24px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid #eaecef; }
                 .markdown-body h2 { font-size: 18px; font-weight: 700; margin: 20px 0 10px 0; color: #2383e2; }
-                .markdown-body .inline-code { background: #f2f2f1; color: #eb5757; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+                .markdown-body h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px 0; }
+                .markdown-body .inline-code { background: #f2f2f1; color: #eb5757; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px; }
                 .code-wrapper { background: #282c34; border-radius: 6px; margin: 14px 0; overflow: hidden; }
-                .code-header { background: #21252b; color: #abb2bf; font-size: 11px; padding: 4px 12px; }
+                .code-header { background: #21252b; color: #abb2bf; font-size: 11px; padding: 4px 12px; text-transform: uppercase; font-family: monospace; }
                 .code-block { margin: 0; padding: 14px 16px; color: #abb2bf; font-family: Consolas, Monaco, monospace; font-size: 13px; line-height: 1.5; overflow-x: auto; }
                 .markdown-quote { margin: 12px 0; padding: 8px 16px; border-left: 4px solid #2383e2; background: #f7f9fc; color: #606266; }
                 .task-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
@@ -81,7 +81,8 @@ public class WikiDocumentController {
                 .markdown-table th { background: #f5f7fa; font-weight: 600; }
                 .markdown-hr { border: none; height: 1px; background: #e4e7ed; margin: 20px 0; }
                 .markdown-link { color: #2383e2; text-decoration: none; }
-                @media (max-width: 768px) { .main-card { padding: 24px 16px; margin: 16px 12px 60px 12px; } .article-title { font-size: 22px; } }
+                .markdown-link:hover { text-decoration: underline; }
+                @media (max-width: 768px) { .main-card { padding: 24px 16px; margin: 16px 12px 60px 12px; } .article-title { font-size: 22px; } .share-header { padding: 0 16px; } }
               </style>
             </head>
             <body>
@@ -95,21 +96,23 @@ public class WikiDocumentController {
                 </div>
               </header>
               <main class="main-card">
-                <h1 class="article-title">%s</h1>
+                <h1 class="article-title">{{DOC_TITLE}}</h1>
                 <div class="meta-row">
                   <div class="meta-left">
-                    <span>👤 作者: <b>%s</b></span>
-                    <span>🕒 更新于: %s</span>
+                    <span>👤 作者: <b>{{DOC_AUTHOR}}</b></span>
+                    <span>🕒 更新于: {{DOC_TIME}}</span>
                   </div>
-                  <div>
-                    %s
-                    %s
+                  <div class="meta-right">
+                    {{REQ_HTML}}
+                    {{TAG_HTML}}
                   </div>
                 </div>
                 <div id="content" class="markdown-body"></div>
               </main>
+
               <script>
-                const rawMarkdown = "%s";
+                const rawMarkdown = {{RAW_JSON_CONTENT}};
+
                 function renderMarkdown(raw) {
                   if (!raw) return '<div style="color:#999;text-align:center;padding:40px 0;">（文档暂无正文）</div>';
                   let t = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -143,31 +146,55 @@ public class WikiDocumentController {
                     html += '</tbody></table>';
                     return html;
                   });
-                  t = t.replace(/!\\[([^\\]]*)\\]\\(([^)]+)\\)/g, '<img src="$2" alt="$1" style="max-width:100%%;border-radius:4px;" />');
+                  t = t.replace(/!\\[([^\\]]*)\\]\\(([^)]+)\\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:4px;" />');
                   t = t.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2" target="_blank" class="markdown-link">$1 🔗</a>');
                   t = t.replace(/\\n\\n/g, '<div style="height:12px;"></div>');
                   t = t.replace(/\\n/g, '<br/>');
                   return t;
                 }
+
                 document.getElementById('content').innerHTML = renderMarkdown(rawMarkdown);
+
                 function copyContent() {
-                  navigator.clipboard.writeText(rawMarkdown).then(() => { alert('已复制正文 Markdown 内容！'); });
+                  navigator.clipboard.writeText(rawMarkdown).then(() => {
+                    alert('已复制正文 Markdown 内容！');
+                  });
                 }
               </script>
             </body>
             </html>
-            """.formatted(
-                    title,
-                    title,
-                    author,
-                    updateTime,
-                    reqTitle.isEmpty() ? "" : "<span class=\"tag tag-req\">📌 " + reqTitle + "</span>",
-                    tags.isEmpty() ? "" : "<span class=\"tag tag-warn\">🏷️ " + tags + "</span>",
-                    jsonContent
-            );
+            """;
+
+            return template
+                    .replace("{{DOC_TITLE}}", escapeHtml(title))
+                    .replace("{{DOC_AUTHOR}}", escapeHtml(author))
+                    .replace("{{DOC_TIME}}", escapeHtml(updateTime))
+                    .replace("{{REQ_HTML}}", reqHtml)
+                    .replace("{{TAG_HTML}}", tagHtml)
+                    .replace("{{RAW_JSON_CONTENT}}", contentJson);
+
         } catch (Exception e) {
-            return "<h3 style='text-align:center;margin-top:50px;color:#999;'>未找到该分享文档或已被删除</h3>";
+            e.printStackTrace();
+            return "<h3 style='text-align:center;margin-top:50px;color:#999;'>未找到该分享文档或已被删除: " + e.getMessage() + "</h3>";
         }
+    }
+
+    // 2. 免鉴权公开 JSON 接口 (支持前端页面异步调用)
+    @GetMapping("/api/wikis/share/{id}")
+    public ResponseEntity<?> getSharedWikiJsonById(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(wikiDocumentService.getWikiDocumentById(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    private String escapeHtml(String input) {
+        if (input == null) return "";
+        return input.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 
     // 后续常规接口
