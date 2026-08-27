@@ -14,6 +14,16 @@ public class WikiDocumentController {
     @Autowired
     private WikiDocumentService wikiDocumentService;
 
+    // 免鉴权公开分享只读接口
+    @GetMapping("/share/{id}")
+    public ResponseEntity<?> getSharedWikiById(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(wikiDocumentService.getWikiDocumentById(id));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @GetMapping
     public ResponseEntity<?> getWikis(@RequestParam(required = false) Long requirementId) {
         return ResponseEntity.ok(wikiDocumentService.getWikiDocuments(requirementId));
