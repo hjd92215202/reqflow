@@ -62,11 +62,14 @@ public class WikiDocumentController {
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>{{DOC_TITLE}} - ReqFlow Wiki</title>
+              <!-- 核心：匹配官方 Logo 的矢量 Favicon 标签页图标 -->
+              <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%232188FF'/%3E%3Cstop offset='100%25' stop-color='%230062E3'/%3E%3C/linearGradient%3E%3ClinearGradient id='waveLight' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2380CAFF' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='%2340B0FF' stop-opacity='0.3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='120' fill='url(%23bgGrad)'/%3E%3Cpath d='M 80 320 C 140 220, 220 340, 310 260 C 370 210, 420 250, 440 230' fill='none' stroke='url(%23waveLight)' stroke-width='32' stroke-linecap='round'/%3E%3Cpath d='M 82 260 C 130 360, 240 160, 360 230 C 400 255, 426 230, 440 216' fill='none' stroke='%23FFFFFF' stroke-width='42' stroke-linecap='round'/%3E%3Ccircle cx='260' cy='205' r='22' fill='%23FFFFFF'/%3E%3C/svg%3E">
               <style>
                 * { box-sizing: border-box; }
                 body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background-color: #fcfcfb; color: #37352f; line-height: 1.7; -webkit-font-smoothing: antialiased; }
                 .share-header { height: 50px; background: #fff; border-bottom: 1px solid rgba(55,53,47,0.09); display: flex; justify-content: space-between; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
                 .share-brand { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+                .brand-svg-logo { width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0; }
                 .badge { font-size: 11px; background: #f0f0f0; color: #666; padding: 2px 8px; border-radius: 4px; font-weight: normal; }
                 .btn { background: #fff; border: 1px solid #dcdfe6; color: #606266; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.15s; }
                 .btn:hover { color: #2383e2; border-color: #c6e2ff; background: #ecf5ff; }
@@ -74,9 +77,11 @@ public class WikiDocumentController {
                 .article-title { margin: 0 0 16px 0; font-size: 28px; font-weight: 700; line-height: 1.3; }
                 .meta-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #8c8c8c; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px; margin-bottom: 24px; }
                 .meta-left { display: flex; gap: 16px; }
+                .meta-right { display: flex; gap: 8px; }
                 .tag { font-size: 11px; padding: 2px 8px; border-radius: 3px; }
                 .tag-req { background: #e0f0ff; color: #0f73da; }
                 .tag-warn { background: #fdecc8; color: #b36b00; }
+                /* Markdown 渲染样式 */
                 .markdown-body h1 { font-size: 22px; font-weight: 700; margin: 24px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid #eaecef; }
                 .markdown-body h2 { font-size: 18px; font-weight: 700; margin: 20px 0 10px 0; color: #2383e2; }
                 .markdown-body h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px 0; }
@@ -99,7 +104,23 @@ public class WikiDocumentController {
             <body>
               <header class="share-header">
                 <div class="share-brand">
-                  <span>Wiki</span>
+                  <svg class="brand-svg-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <defs>
+                      <linearGradient id="headerBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#2188FF"/>
+                        <stop offset="100%" stop-color="#0062E3"/>
+                      </linearGradient>
+                      <linearGradient id="headerWaveLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#80CAFF" stop-opacity="0.8"/>
+                        <stop offset="100%" stop-color="#40B0FF" stop-opacity="0.3"/>
+                      </linearGradient>
+                    </defs>
+                    <rect width="512" height="512" rx="120" fill="url(#headerBgGrad)"/>
+                    <path d="M 80 320 C 140 220, 220 340, 310 260 C 370 210, 420 250, 440 230" fill="none" stroke="url(#headerWaveLight)" stroke-width="32" stroke-linecap="round"/>
+                    <path d="M 82 260 C 130 360, 240 160, 360 230 C 400 255, 426 230, 440 216" fill="none" stroke="#FFFFFF" stroke-width="42" stroke-linecap="round"/>
+                    <circle cx="260" cy="205" r="22" fill="#FFFFFF"/>
+                  </svg>
+                  <span>ReqFlow Wiki</span>
                   <span class="badge">📖 只读分享</span>
                 </div>
                 <div>
