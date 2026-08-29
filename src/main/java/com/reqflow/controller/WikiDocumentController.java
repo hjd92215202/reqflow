@@ -99,7 +99,7 @@ public class WikiDocumentController {
             <body>
               <header class="share-header">
                 <div class="share-brand">
-                  <span>🌊 ReqFlow Wiki</span>
+                  <span>Wiki</span>
                   <span class="badge">📖 只读分享</span>
                 </div>
                 <div>
