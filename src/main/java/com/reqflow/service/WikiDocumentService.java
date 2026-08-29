@@ -9,4 +9,8 @@ public interface WikiDocumentService {
     WikiDocument createWikiDocument(WikiDocument document, Long userId);
     WikiDocument updateWikiDocument(Long id, WikiDocument details);
     void deleteWikiDocument(Long id);
+
+    // 新增安全分享方法
+    String getOrCreateShareToken(Long id);
+    WikiDocument getWikiDocumentByShareToken(String shareToken);
 }

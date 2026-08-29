@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -99,5 +100,34 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
             deleteWikiDocument(child.getId());
         }
         wikiDocumentRepository.deleteById(id);
+    }
+
+    // 核心实现：生成或获取不可预测的高强度 16 位随机分享令牌
+    @Override
+    public String getOrCreateShareToken(Long id) {
+        WikiDocument doc = wikiDocumentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+        if (doc.getShareToken() == null || doc.getShareToken().trim().isEmpty()) {
+            // 生成 16 位全局唯一的十六进制随机字符串
+            String token = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            doc.setShareToken(token);
+            wikiDocumentRepository.save(doc);
+        }
+        return doc.getShareToken();
+    }
+
+    // 核心实现：仅根据随机 Token 查找文档（完全杜绝通过递增 ID 穷举猜测）
+    @Override
+    @Transactional(readOnly = true)
+    public WikiDocument getWikiDocumentByShareToken(String shareToken) {
+        WikiDocument doc = wikiDocumentRepository.findByShareToken(shareToken)
+                .orElseThrow(() -> new RuntimeException("该分享文档不存在或已被撤销"));
+        if (doc.getCreatorId() != null) {
+            userRepository.findById(doc.getCreatorId()).ifPresent(user -> doc.setCreatorNickname(user.getNickname()));
+        }
+        if (doc.getRequirementId() != null) {
+            requirementRepository.findById(doc.getRequirementId()).ifPresent(req -> doc.setRequirementTitle(req.getTitle()));
+        }
+        return doc;
     }
 }

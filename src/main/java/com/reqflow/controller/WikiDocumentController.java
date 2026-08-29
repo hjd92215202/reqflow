@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping
 public class WikiDocumentController {
@@ -18,12 +20,23 @@ public class WikiDocumentController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 1. 全端通用的 Web HTML 免登录只读分享页面 (安全模板替换引擎)
-    @GetMapping(value = "/share/wiki/{id}", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
-    @ResponseBody
-    public String renderSharedWikiPage(@PathVariable Long id) {
+    // 1. 获取/生成指定文档的安全分享 Token (需要登录认证)
+    @PostMapping("/api/wikis/{id}/share-token")
+    public ResponseEntity<?> getOrCreateShareToken(@PathVariable Long id) {
         try {
-            WikiDocument doc = wikiDocumentService.getWikiDocumentById(id);
+            String token = wikiDocumentService.getOrCreateShareToken(id);
+            return ResponseEntity.ok(Map.of("shareToken", token));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // 2. 全端通用的 Web HTML 免登录只读分享页面（根据随机 Token 访问）
+    @GetMapping(value = "/share/wiki/{token}", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+    @ResponseBody
+    public String renderSharedWikiPage(@PathVariable String token) {
+        try {
+            WikiDocument doc = wikiDocumentService.getWikiDocumentByShareToken(token);
             if (doc == null) {
                 return "<h3 style='text-align:center;margin-top:50px;color:#999;'>未找到该分享文档或已被删除</h3>";
             }
@@ -36,7 +49,7 @@ public class WikiDocumentController {
             if (updateTime.length() > 16) updateTime = updateTime.substring(0, 16);
             String rawContent = doc.getContent() != null ? doc.getContent() : "";
 
-            // 使用 Jackson 绝对安全地将正文转义为标准的 JS 字符串
+            // 使用 Jackson 绝对安全地序列化正文
             String contentJson = objectMapper.writeValueAsString(rawContent);
 
             String reqHtml = reqTitle.isEmpty() ? "" : "<span class=\"tag tag-req\">📌 " + escapeHtml(reqTitle) + "</span>";
@@ -61,11 +74,9 @@ public class WikiDocumentController {
                 .article-title { margin: 0 0 16px 0; font-size: 28px; font-weight: 700; line-height: 1.3; }
                 .meta-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #8c8c8c; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px; margin-bottom: 24px; }
                 .meta-left { display: flex; gap: 16px; }
-                .meta-right { display: flex; gap: 8px; }
                 .tag { font-size: 11px; padding: 2px 8px; border-radius: 3px; }
                 .tag-req { background: #e0f0ff; color: #0f73da; }
                 .tag-warn { background: #fdecc8; color: #b36b00; }
-                /* Markdown 渲染样式 */
                 .markdown-body h1 { font-size: 22px; font-weight: 700; margin: 24px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid #eaecef; }
                 .markdown-body h2 { font-size: 18px; font-weight: 700; margin: 20px 0 10px 0; color: #2383e2; }
                 .markdown-body h3 { font-size: 15px; font-weight: 600; margin: 16px 0 8px 0; }
@@ -174,16 +185,15 @@ public class WikiDocumentController {
                     .replace("{{RAW_JSON_CONTENT}}", contentJson);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return "<h3 style='text-align:center;margin-top:50px;color:#999;'>未找到该分享文档或已被删除: " + e.getMessage() + "</h3>";
+            return "<h3 style='text-align:center;margin-top:50px;color:#999;'>未找到该分享文档或已被删除</h3>";
         }
     }
 
-    // 2. 免鉴权公开 JSON 接口 (支持前端页面异步调用)
-    @GetMapping("/api/wikis/share/{id}")
-    public ResponseEntity<?> getSharedWikiJsonById(@PathVariable Long id) {
+    // 3. 免鉴权公开 JSON 接口 (根据随机 Token 查找)
+    @GetMapping("/api/wikis/share/{token}")
+    public ResponseEntity<?> getSharedWikiJsonByToken(@PathVariable String token) {
         try {
-            return ResponseEntity.ok(wikiDocumentService.getWikiDocumentById(id));
+            return ResponseEntity.ok(wikiDocumentService.getWikiDocumentByShareToken(token));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

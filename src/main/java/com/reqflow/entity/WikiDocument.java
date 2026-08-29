@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "req_wiki_document", indexes = {
         @Index(name = "idx_wiki_requirement_id", columnList = "requirement_id"),
-        @Index(name = "idx_wiki_parent_id", columnList = "parent_id")
+        @Index(name = "idx_wiki_parent_id", columnList = "parent_id"),
+        @Index(name = "idx_wiki_share_token", columnList = "share_token") // 新增索引加速检索
 })
 public class WikiDocument {
     @Id
@@ -16,21 +17,25 @@ public class WikiDocument {
     private Long id;
 
     @Column(name = "requirement_id")
-    private Long requirementId; // 关联需求ID (为空表示全局公共经验)
+    private Long requirementId;
 
     @Column(name = "parent_id")
-    private Long parentId; // 父文档ID (支持树形层级)
+    private Long parentId;
 
     @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String content; // 文档内容 (Markdown / HTML)
+    private String content;
 
-    private String tags; // 逗号分隔标签，如: "踩坑记录,技术方案"
+    private String tags;
 
     @Column(name = "creator_id", nullable = false)
     private Long creatorId;
+
+    // 核心安全字段：随机生成的分享令牌 (为空代表从未对外分享)
+    @Column(name = "share_token", unique = true)
+    private String shareToken;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -39,8 +44,8 @@ public class WikiDocument {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Transient
-    private String creatorNickname; // 动态冗余展示创建人昵称
+    private String creatorNickname;
 
     @Transient
-    private String requirementTitle; // 动态冗余展示关联需求名称
+    private String requirementTitle;
 }
