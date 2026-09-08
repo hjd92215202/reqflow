@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.reqflow.entity.WikiDocument;
 import com.reqflow.service.MarkdownRenderService;
 import com.reqflow.service.WikiDocumentService;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest; // 补全导入
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -56,7 +56,7 @@ public class WikiDocumentController {
             // 服务端直接转换为语义安全 HTML
             String renderedBodyHtml = markdownRenderService.renderToHtml(rawContent);
 
-            // 使用 Jackson 序列化原文以支持一键复制
+            // 序列化原始内容以支持一键复制全文
             String contentJson = objectMapper.writeValueAsString(rawContent);
 
             String reqHtml = reqTitle.isEmpty() ? "" : "<span class=\"tag tag-req\">📌 " + escapeHtml(reqTitle) + "</span>";
@@ -71,9 +71,14 @@ public class WikiDocumentController {
               <title>{{DOC_TITLE}} - ReqFlow Wiki</title>
               <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%232188FF'/%3E%3Cstop offset='100%25' stop-color='%230062E3'/%3E%3C/linearGradient%3E%3ClinearGradient id='waveLight' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2380CAFF' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='%2340B0FF' stop-opacity='0.3'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='120' fill='url(%23bgGrad)'/%3E%3Cpath d='M 80 320 C 140 220, 220 340, 310 260 C 370 210, 420 250, 440 230' fill='none' stroke='url(%23waveLight)' stroke-width='32' stroke-linecap='round'/%3E%3Cpath d='M 82 260 C 130 360, 240 160, 360 230 C 400 255, 426 230, 440 216' fill='none' stroke='%23FFFFFF' stroke-width='42' stroke-linecap='round'/%3E%3Ccircle cx='260' cy='205' r='22' fill='%23FFFFFF'/%3E%3C/svg%3E">
               
-              <!-- 引入高亮样式库 -->
+              <!-- 1. Highlight.js 代码高亮 -->
               <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
               <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+              <!-- 2. KaTeX 数学公式渲染库与自动解析器 -->
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 
               <style>
                 * { box-sizing: border-box; }
@@ -85,7 +90,7 @@ public class WikiDocumentController {
                 .btn { background: #fff; border: 1px solid #dcdfe6; color: #606266; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.15s; }
                 .btn:hover { color: #2383e2; border-color: #c6e2ff; background: #ecf5ff; }
                 .main-card { max-width: 880px; margin: 32px auto 80px auto; background: #fff; padding: 40px 48px; border-radius: 8px; border: 1px solid rgba(55,53,47,0.08); box-shadow: 0 2px 12px rgba(0,0,0,0.03); }
-                .article-title { margin: 0 0 16px 0; font-size: 28px; font-weight: 700; line-height: 1.3; }
+                .article-title { margin: 0 0 16px 0; font-size: 28px; font-weight: 700; line-height: 1.3; color: #24292f; }
                 .meta-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #8c8c8c; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px; margin-bottom: 24px; }
                 .meta-left { display: flex; gap: 16px; }
                 .meta-right { display: flex; gap: 8px; }
@@ -93,25 +98,41 @@ public class WikiDocumentController {
                 .tag-req { background: #e0f0ff; color: #0f73da; }
                 .tag-warn { background: #fdecc8; color: #b36b00; }
                 
-                /* Markdown GitHub 主题标准规则 */
-                .markdown-body { font-size: 14.5px; line-height: 1.7; word-break: break-word; }
+                /* GitHub 标准正文样式 */
+                .markdown-body { font-size: 14.5px; line-height: 1.7; word-break: break-word; color: #24292f; }
                 .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 { color: #24292f; font-weight: 600; margin-top: 24px; margin-bottom: 14px; line-height: 1.35; }
                 .markdown-body h1 { font-size: 1.75em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; }
                 .markdown-body h2 { font-size: 1.35em; padding-bottom: 0.3em; border-bottom: 1px solid #d0d7de; }
                 .markdown-body h3 { font-size: 1.15em; }
                 .markdown-body a { color: #0969da; text-decoration: none; }
                 .markdown-body a:hover { text-decoration: underline; }
-                .markdown-body code:not(pre code) { padding: 0.2em 0.4em; background: rgba(175, 184, 193, 0.2); border-radius: 6px; font-size: 85%; font-family: ui-monospace, monospace; color: #cf222e; }
-                .markdown-body pre { background: #f6f8fa; padding: 14px 16px; border-radius: 6px; border: 1px solid #d0d7de; overflow-x: auto; }
-                .markdown-body pre code { background: transparent; padding: 0; font-family: ui-monospace, monospace; font-size: 13px; }
+                .markdown-body code:not(pre code):not(.katex code) { padding: 0.2em 0.4em; background: rgba(175, 184, 193, 0.2); border-radius: 6px; font-size: 85%; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #cf222e; }
+                
+                /* 代码块容器与复制按钮 */
+                .code-block-wrap { position: relative; margin: 16px 0; border-radius: 6px; border: 1px solid #d0d7de; background-color: #f6f8fa; overflow: hidden; }
+                .code-block-header { display: flex; justify-content: space-between; align-items: center; padding: 4px 12px; background-color: #f6f8fa; border-bottom: 1px solid #d0d7de; font-size: 12px; color: #57606a; font-family: ui-monospace, monospace; }
+                .code-copy-btn { background: #ffffff; border: 1px solid #d0d7de; border-radius: 4px; color: #57606a; cursor: pointer; font-size: 11px; padding: 2px 8px; transition: all 0.15s; }
+                .code-copy-btn:hover { color: #0969da; border-color: #0969da; }
+                .markdown-body pre { margin: 0; padding: 14px 16px; background-color: #ffffff; overflow-x: auto; }
+                .markdown-body pre code { background: transparent; padding: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.5; }
+                
+                /* 引用与列表 */
                 .markdown-body blockquote { margin: 16px 0; padding: 0 1em; color: #57606a; border-left: 0.25em solid #d0d7de; }
-                .markdown-body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
-                .markdown-body table th, .markdown-body table td { border: 1px solid #d0d7de; padding: 8px 13px; }
+                .markdown-body ul, .markdown-body ol { padding-left: 2em; margin: 8px 0; }
+                .markdown-body li { margin: 4px 0; }
+                .markdown-body input[type="checkbox"] { margin-right: 6px; vertical-align: middle; }
+
+                /* 表格横向滚动支持与对齐 */
+                .markdown-body table { display: block; width: max-content; max-width: 100%; overflow: auto; border-collapse: collapse; margin: 16px 0; }
+                .markdown-body table th, .markdown-body table td { border: 1px solid #d0d7de; padding: 8px 14px; font-size: 13.5px; }
                 .markdown-body table th { background: #f6f8fa; font-weight: 600; }
                 .markdown-body table tr:nth-child(2n) { background: #f6f8fa; }
                 .markdown-body hr { border: none; height: 1px; background: #d0d7de; margin: 24px 0; }
-                .markdown-body input[type="checkbox"] { margin-right: 6px; vertical-align: middle; }
                 
+                /* KaTeX 公式微调 */
+                .markdown-body .katex { font-size: 1.05em; text-rendering: auto; }
+                .markdown-body .katex-display { margin: 1em 0; overflow-x: auto; overflow-y: hidden; }
+
                 @media (max-width: 768px) { .main-card { padding: 24px 16px; margin: 16px 12px 60px 12px; } .article-title { font-size: 22px; } .share-header { padding: 0 16px; } }
               </style>
             </head>
@@ -161,9 +182,54 @@ public class WikiDocumentController {
               <script>
                 const rawMarkdown = {{RAW_JSON_CONTENT}};
 
-                // 初始化代码高亮
                 document.addEventListener('DOMContentLoaded', () => {
-                  hljs.highlightAll();
+                  const contentEl = document.getElementById('content');
+
+                  // 1. 自动渲染所有 LaTeX 数学公式 ($...$ 和 $$...$$)
+                  if (window.renderMathInElement) {
+                    renderMathInElement(contentEl, {
+                      delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                      ],
+                      throwOnError: false
+                    });
+                  }
+
+                  // 2. 代码块高亮与增强包装（追加语言标识与复制按钮）
+                  document.querySelectorAll('#content pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+
+                    const pre = block.parentElement;
+                    const wrap = document.createElement('div');
+                    wrap.className = 'code-block-wrap';
+
+                    const header = document.createElement('div');
+                    header.className = 'code-block-header';
+
+                    let lang = 'code';
+                    block.classList.forEach(cls => {
+                      if (cls.startsWith('language-')) {
+                        lang = cls.replace('language-', '');
+                      }
+                    });
+
+                    header.innerHTML = `
+                      <span>${lang}</span>
+                      <button class="code-copy-btn" type="button">📋 复制</button>
+                    `;
+
+                    header.querySelector('.code-copy-btn').addEventListener('click', function() {
+                      navigator.clipboard.writeText(block.innerText).then(() => {
+                        this.innerText = '✓ 已复制';
+                        setTimeout(() => { this.innerText = '📋 复制'; }, 1500);
+                      });
+                    });
+
+                    pre.parentNode.insertBefore(wrap, pre);
+                    wrap.appendChild(header);
+                    wrap.appendChild(pre);
+                  });
                 });
 
                 function copyContent() {
@@ -208,7 +274,7 @@ public class WikiDocumentController {
                 .replace("\"", "&quot;");
     }
 
-    // 4. 后续常规增删改查接口
+    // 4. 常规增删改查接口
     @GetMapping("/api/wikis")
     public ResponseEntity<?> getWikis(@RequestParam(required = false) Long requirementId) {
         return ResponseEntity.ok(wikiDocumentService.getWikiDocuments(requirementId));
