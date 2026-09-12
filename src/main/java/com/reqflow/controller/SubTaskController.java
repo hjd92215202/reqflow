@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/subtasks")
 public class SubTaskController {
 
-    @Autowired
-    private SubTaskService subTaskService;
+    @Autowired private SubTaskService subTaskService;
 
     @GetMapping("/stage/{stageId}") // 语义化路径调整
     public ResponseEntity<?> getByStage(@PathVariable Long stageId) {

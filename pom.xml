@@ -98,6 +98,41 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>2.43.0</version>
+                <configuration>
+                    <java>
+                        <!-- 排除生成目录和第三方目录 -->
+                        <includes>
+                            <include>src/main/java/**/*.java</include>
+                            <include>src/test/java/**/*.java</include>
+                        </includes>
+                        <!-- 统一使用 Google Java Format 规范 -->
+                        <googleJavaFormat>
+                            <version>1.19.2</version>
+                            <style>AOSP</style> <!-- 4个空格缩进，符合国内 Java 团队习惯 -->
+                            <reflowLongStrings>true</reflowLongStrings>
+                        </googleJavaFormat>
+                        <!-- 清除无用 import 并按字母排序 -->
+                        <removeUnusedImports />
+                        <importOrder />
+                        <!-- 统一换行符为 LF -->
+                        <endWithNewline />
+                        <trimTrailingWhitespace />
+                    </java>
+                </configuration>
+                <executions>
+                    <!-- 绑定到 maven 的 verify 生命周期阶段 -->
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

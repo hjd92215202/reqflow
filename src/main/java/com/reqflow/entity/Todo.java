@@ -1,15 +1,15 @@
 package com.reqflow.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "sys_todo", indexes = {
-        @Index(name = "idx_todo_user_id", columnList = "user_id")
-})
+@Table(
+        name = "sys_todo",
+        indexes = {@Index(name = "idx_todo_user_id", columnList = "user_id")})
 public class Todo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

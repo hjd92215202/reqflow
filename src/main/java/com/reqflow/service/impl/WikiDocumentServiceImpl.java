@@ -7,29 +7,25 @@ import com.reqflow.repository.RequirementRepository;
 import com.reqflow.repository.UserRepository;
 import com.reqflow.repository.WikiDocumentRepository;
 import com.reqflow.service.WikiDocumentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class WikiDocumentServiceImpl implements WikiDocumentService {
 
-    @Autowired
-    private WikiDocumentRepository wikiDocumentRepository;
+    @Autowired private WikiDocumentRepository wikiDocumentRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private RequirementRepository requirementRepository;
+    @Autowired private RequirementRepository requirementRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -41,10 +37,14 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
             list = wikiDocumentRepository.findAllByOrderByIdDesc();
         }
 
-        Map<Long, User> userMap = userRepository.findAll().stream()
-                .collect(Collectors.toMap(User::getId, Function.identity(), (a, b) -> a));
-        Map<Long, Requirement> reqMap = requirementRepository.findAll().stream()
-                .collect(Collectors.toMap(Requirement::getId, Function.identity(), (a, b) -> a));
+        Map<Long, User> userMap =
+                userRepository.findAll().stream()
+                        .collect(Collectors.toMap(User::getId, Function.identity(), (a, b) -> a));
+        Map<Long, Requirement> reqMap =
+                requirementRepository.findAll().stream()
+                        .collect(
+                                Collectors.toMap(
+                                        Requirement::getId, Function.identity(), (a, b) -> a));
 
         for (WikiDocument doc : list) {
             if (doc.getCreatorId() != null && userMap.containsKey(doc.getCreatorId())) {
@@ -60,13 +60,19 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
     @Override
     @Transactional(readOnly = true)
     public WikiDocument getWikiDocumentById(Long id) {
-        WikiDocument doc = wikiDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+        WikiDocument doc =
+                wikiDocumentRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Wiki document not found"));
         if (doc.getCreatorId() != null) {
-            userRepository.findById(doc.getCreatorId()).ifPresent(user -> doc.setCreatorNickname(user.getNickname()));
+            userRepository
+                    .findById(doc.getCreatorId())
+                    .ifPresent(user -> doc.setCreatorNickname(user.getNickname()));
         }
         if (doc.getRequirementId() != null) {
-            requirementRepository.findById(doc.getRequirementId()).ifPresent(req -> doc.setRequirementTitle(req.getTitle()));
+            requirementRepository
+                    .findById(doc.getRequirementId())
+                    .ifPresent(req -> doc.setRequirementTitle(req.getTitle()));
         }
         return doc;
     }
@@ -82,8 +88,10 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
 
     @Override
     public WikiDocument updateWikiDocument(Long id, WikiDocument details) {
-        WikiDocument existing = wikiDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+        WikiDocument existing =
+                wikiDocumentRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Wiki document not found"));
         existing.setTitle(details.getTitle());
         existing.setContent(details.getContent());
         existing.setTags(details.getTags());
@@ -105,8 +113,10 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
     // 核心实现：生成或获取不可预测的高强度 16 位随机分享令牌
     @Override
     public String getOrCreateShareToken(Long id) {
-        WikiDocument doc = wikiDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+        WikiDocument doc =
+                wikiDocumentRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Wiki document not found"));
         if (doc.getShareToken() == null || doc.getShareToken().trim().isEmpty()) {
             // 生成 16 位全局唯一的十六进制随机字符串
             String token = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -120,13 +130,19 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
     @Override
     @Transactional(readOnly = true)
     public WikiDocument getWikiDocumentByShareToken(String shareToken) {
-        WikiDocument doc = wikiDocumentRepository.findByShareToken(shareToken)
-                .orElseThrow(() -> new RuntimeException("该分享文档不存在或已被撤销"));
+        WikiDocument doc =
+                wikiDocumentRepository
+                        .findByShareToken(shareToken)
+                        .orElseThrow(() -> new RuntimeException("该分享文档不存在或已被撤销"));
         if (doc.getCreatorId() != null) {
-            userRepository.findById(doc.getCreatorId()).ifPresent(user -> doc.setCreatorNickname(user.getNickname()));
+            userRepository
+                    .findById(doc.getCreatorId())
+                    .ifPresent(user -> doc.setCreatorNickname(user.getNickname()));
         }
         if (doc.getRequirementId() != null) {
-            requirementRepository.findById(doc.getRequirementId()).ifPresent(req -> doc.setRequirementTitle(req.getTitle()));
+            requirementRepository
+                    .findById(doc.getRequirementId())
+                    .ifPresent(req -> doc.setRequirementTitle(req.getTitle()));
         }
         return doc;
     }

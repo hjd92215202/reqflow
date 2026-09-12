@@ -3,17 +3,16 @@ package com.reqflow.service.impl;
 import com.reqflow.entity.SubTask;
 import com.reqflow.repository.SubTaskRepository;
 import com.reqflow.service.SubTaskService;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class SubTaskServiceImpl implements SubTaskService {
 
-    @Autowired
-    private SubTaskRepository subTaskRepository;
+    @Autowired private SubTaskRepository subTaskRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -31,8 +30,10 @@ public class SubTaskServiceImpl implements SubTaskService {
     @Override
     @Transactional
     public SubTask updateSubTask(Long id, SubTask subTaskDetails) {
-        var existing = subTaskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SubTask not found"));
+        var existing =
+                subTaskRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("SubTask not found"));
         existing.setTitle(subTaskDetails.getTitle());
         existing.setAssignee(subTaskDetails.getAssignee());
         existing.setStatus(subTaskDetails.getStatus());

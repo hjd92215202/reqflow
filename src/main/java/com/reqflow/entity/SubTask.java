@@ -1,20 +1,22 @@
 package com.reqflow.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Data;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @Entity
-@Table(name = "req_sub_task", indexes = {
-        @Index(name = "idx_subtask_stage_id", columnList = "stage_id"),
-        @Index(name = "idx_subtask_parent_id", columnList = "parent_id")
-})
+@Table(
+        name = "req_sub_task",
+        indexes = {
+            @Index(name = "idx_subtask_stage_id", columnList = "stage_id"),
+            @Index(name = "idx_subtask_parent_id", columnList = "parent_id")
+        })
 public class SubTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

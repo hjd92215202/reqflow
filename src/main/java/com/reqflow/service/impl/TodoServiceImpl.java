@@ -7,35 +7,29 @@ import com.reqflow.entity.SubTask;
 import com.reqflow.entity.Todo;
 import com.reqflow.repository.*;
 import com.reqflow.service.TodoService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class TodoServiceImpl implements TodoService {
 
-    @Autowired
-    private TodoRepository todoRepository;
+    @Autowired private TodoRepository todoRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
-    @Autowired
-    private SubTaskRepository subTaskRepository;
+    @Autowired private SubTaskRepository subTaskRepository;
 
-    @Autowired
-    private StageRepository stageRepository;
+    @Autowired private StageRepository stageRepository;
 
-    @Autowired
-    private RequirementRepository requirementRepository;
+    @Autowired private RequirementRepository requirementRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -67,18 +61,41 @@ public class TodoServiceImpl implements TodoService {
             String nickname = user.getNickname();
             String username = user.getUsername();
 
-            List<SubTask> assignedSubTasks = subTaskRepository.findAll().stream()
-                    .filter(st -> st.getAssignee() != null &&
-                            (st.getAssignee().trim().equalsIgnoreCase(nickname != null ? nickname.trim() : "") ||
-                                    st.getAssignee().trim().equalsIgnoreCase(username != null ? username.trim() : "")))
-                    .collect(Collectors.toList());
+            List<SubTask> assignedSubTasks =
+                    subTaskRepository.findAll().stream()
+                            .filter(
+                                    st ->
+                                            st.getAssignee() != null
+                                                    && (st.getAssignee()
+                                                                    .trim()
+                                                                    .equalsIgnoreCase(
+                                                                            nickname != null
+                                                                                    ? nickname
+                                                                                            .trim()
+                                                                                    : "")
+                                                            || st.getAssignee()
+                                                                    .trim()
+                                                                    .equalsIgnoreCase(
+                                                                            username != null
+                                                                                    ? username
+                                                                                            .trim()
+                                                                                    : "")))
+                            .collect(Collectors.toList());
 
             if (!assignedSubTasks.isEmpty()) {
                 // 预加载所有 Stages 与 Requirements 避免 N+1
-                Map<Long, Stage> stageMap = stageRepository.findAll().stream()
-                        .collect(Collectors.toMap(Stage::getId, Function.identity(), (a, b) -> a));
-                Map<Long, Requirement> reqMap = requirementRepository.findAll().stream()
-                        .collect(Collectors.toMap(Requirement::getId, Function.identity(), (a, b) -> a));
+                Map<Long, Stage> stageMap =
+                        stageRepository.findAll().stream()
+                                .collect(
+                                        Collectors.toMap(
+                                                Stage::getId, Function.identity(), (a, b) -> a));
+                Map<Long, Requirement> reqMap =
+                        requirementRepository.findAll().stream()
+                                .collect(
+                                        Collectors.toMap(
+                                                Requirement::getId,
+                                                Function.identity(),
+                                                (a, b) -> a));
 
                 for (SubTask st : assignedSubTasks) {
                     TodoDTO dto = new TodoDTO();
@@ -127,8 +144,10 @@ public class TodoServiceImpl implements TodoService {
     public TodoDTO updateTodo(Long id, TodoDTO dto, Long userId) {
         if (Boolean.TRUE.equals(dto.getIsProjectTask())) {
             // 更新矩阵子任务
-            SubTask subTask = subTaskRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("SubTask not found"));
+            SubTask subTask =
+                    subTaskRepository
+                            .findById(id)
+                            .orElseThrow(() -> new RuntimeException("SubTask not found"));
             subTask.setTitle(dto.getTitle());
             subTask.setStatus(dto.getStatus());
             subTask.setEndDate(dto.getDueDate());
@@ -136,8 +155,10 @@ public class TodoServiceImpl implements TodoService {
             subTaskRepository.save(subTask);
         } else {
             // 更新个人私有待办
-            Todo existing = todoRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Todo not found"));
+            Todo existing =
+                    todoRepository
+                            .findById(id)
+                            .orElseThrow(() -> new RuntimeException("Todo not found"));
             if (!existing.getUserId().equals(userId)) {
                 throw new RuntimeException("Permission denied");
             }
@@ -159,16 +180,20 @@ public class TodoServiceImpl implements TodoService {
         dto.setIsProjectTask(isProjectTask);
 
         if (Boolean.TRUE.equals(isProjectTask)) {
-            SubTask subTask = subTaskRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("SubTask not found"));
+            SubTask subTask =
+                    subTaskRepository
+                            .findById(id)
+                            .orElseThrow(() -> new RuntimeException("SubTask not found"));
             String newStatus = "DONE".equals(subTask.getStatus()) ? "IN_PROGRESS" : "DONE";
             subTask.setStatus(newStatus);
             subTask.setUpdatedAt(LocalDateTime.now());
             subTaskRepository.save(subTask);
             dto.setStatus(newStatus);
         } else {
-            Todo existing = todoRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Todo not found"));
+            Todo existing =
+                    todoRepository
+                            .findById(id)
+                            .orElseThrow(() -> new RuntimeException("Todo not found"));
             if (!existing.getUserId().equals(userId)) {
                 throw new RuntimeException("Permission denied");
             }
@@ -187,8 +212,10 @@ public class TodoServiceImpl implements TodoService {
             // 需求待办解绑或删除子任务
             subTaskRepository.deleteById(id);
         } else {
-            Todo existing = todoRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Todo not found"));
+            Todo existing =
+                    todoRepository
+                            .findById(id)
+                            .orElseThrow(() -> new RuntimeException("Todo not found"));
             if (!existing.getUserId().equals(userId)) {
                 throw new RuntimeException("Permission denied");
             }

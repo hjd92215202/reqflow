@@ -3,33 +3,27 @@ package com.reqflow.service.impl;
 import com.reqflow.entity.Requirement;
 import com.reqflow.repository.*;
 import com.reqflow.service.RequirementService;
+import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @Transactional // 优化引入：类级别显式声明写事务，确保主子表级联回滚
 public class RequirementServiceImpl implements RequirementService {
 
-    @Autowired
-    private RequirementRepository requirementRepository;
+    @Autowired private RequirementRepository requirementRepository;
 
-    @Autowired
-    private StageRepository stageRepository; // 优化引入：注入阶段仓库用于多级级联删除
+    @Autowired private StageRepository stageRepository; // 优化引入：注入阶段仓库用于多级级联删除
 
-    @Autowired
-    private SubTaskRepository subTaskRepository; // 优化引入：注入子任务仓库用于多级级联删除
+    @Autowired private SubTaskRepository subTaskRepository; // 优化引入：注入子任务仓库用于多级级联删除
 
-    @Autowired
-    private DiscussionRepository discussionRepository; // 优化引入：注入日志仓库用于多级级联删除
+    @Autowired private DiscussionRepository discussionRepository; // 优化引入：注入日志仓库用于多级级联删除
 
-    @Autowired
-    private WikiDocumentRepository wikiDocumentRepository;
+    @Autowired private WikiDocumentRepository wikiDocumentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -48,8 +42,10 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Override
     public Requirement updateRequirement(Long id, Requirement reqDetails) {
-        var existing = requirementRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        var existing =
+                requirementRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Requirement not found"));
 
         existing.setTitle(reqDetails.getTitle());
         existing.setDescription(reqDetails.getDescription());

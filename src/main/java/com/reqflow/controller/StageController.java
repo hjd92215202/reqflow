@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/stages")
 public class StageController {
 
-    @Autowired
-    private StageService stageService;
+    @Autowired private StageService stageService;
 
     @GetMapping("/requirement/{requirementId}")
     public ResponseEntity<?> getByRequirement(@PathVariable Long requirementId) {

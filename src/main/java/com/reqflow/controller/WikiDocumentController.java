@@ -6,25 +6,22 @@ import com.reqflow.service.MarkdownRenderService;
 import com.reqflow.service.WikiDocumentService;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-
 @RestController
 @RequestMapping
 public class WikiDocumentController {
 
-    @Autowired
-    private WikiDocumentService wikiDocumentService;
+    @Autowired private WikiDocumentService wikiDocumentService;
 
-    @Autowired
-    private MarkdownRenderService markdownRenderService;
+    @Autowired private MarkdownRenderService markdownRenderService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private String shareTemplate;
@@ -33,7 +30,8 @@ public class WikiDocumentController {
     public void initTemplate() {
         try {
             var resource = new ClassPathResource("templates/share-template.html");
-            this.shareTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            this.shareTemplate =
+                    new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             this.shareTemplate = "<h3>Error loading share template</h3>";
         }
@@ -51,7 +49,9 @@ public class WikiDocumentController {
     }
 
     // 2. 全端通用的 Web HTML 免登录只读分享页面（根据随机 Token 访问，服务端模板直出）
-    @GetMapping(value = "/share/wiki/{token}", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+    @GetMapping(
+            value = "/share/wiki/{token}",
+            produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
     @ResponseBody
     public String renderSharedWikiPage(@PathVariable String token) {
         try {
@@ -64,7 +64,10 @@ public class WikiDocumentController {
             String author = doc.getCreatorNickname() != null ? doc.getCreatorNickname() : "管理员";
             String reqTitle = doc.getRequirementTitle() != null ? doc.getRequirementTitle() : "";
             String tags = doc.getTags() != null ? doc.getTags() : "";
-            String updateTime = doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString().replace("T", " ") : "";
+            String updateTime =
+                    doc.getUpdatedAt() != null
+                            ? doc.getUpdatedAt().toString().replace("T", " ")
+                            : "";
             if (updateTime.length() > 16) updateTime = updateTime.substring(0, 16);
             String rawContent = doc.getContent() != null ? doc.getContent() : "";
 
@@ -72,13 +75,21 @@ public class WikiDocumentController {
             String renderedBodyHtml = markdownRenderService.renderToHtml(rawContent);
 
             // 深度安全防护：序列化为 JSON 并转义 HTML 敏感字符，避免在 <script> 块中提前闭合
-            String contentJson = objectMapper.writeValueAsString(rawContent)
-                    .replace("<", "\\u003c")
-                    .replace(">", "\\u003e")
-                    .replace("&", "\\u0026");
+            String contentJson =
+                    objectMapper
+                            .writeValueAsString(rawContent)
+                            .replace("<", "\\u003c")
+                            .replace(">", "\\u003e")
+                            .replace("&", "\\u0026");
 
-            String reqHtml = reqTitle.isEmpty() ? "" : "<span class=\"tag tag-req\">📌 " + escapeHtml(reqTitle) + "</span>";
-            String tagHtml = tags.isEmpty() ? "" : "<span class=\"tag tag-warn\">🏷️ " + escapeHtml(tags) + "</span>";
+            String reqHtml =
+                    reqTitle.isEmpty()
+                            ? ""
+                            : "<span class=\"tag tag-req\">📌 " + escapeHtml(reqTitle) + "</span>";
+            String tagHtml =
+                    tags.isEmpty()
+                            ? ""
+                            : "<span class=\"tag tag-warn\">🏷️ " + escapeHtml(tags) + "</span>";
 
             return shareTemplate
                     .replace("{{DOC_TITLE}}", escapeHtml(title))
@@ -128,7 +139,8 @@ public class WikiDocumentController {
     }
 
     @PostMapping("/api/wikis")
-    public ResponseEntity<?> create(@RequestBody WikiDocument document, HttpServletRequest request) {
+    public ResponseEntity<?> create(
+            @RequestBody WikiDocument document, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return ResponseEntity.ok(wikiDocumentService.createWikiDocument(document, userId));
     }

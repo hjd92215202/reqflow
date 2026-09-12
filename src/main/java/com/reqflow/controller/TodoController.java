@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/todos")
 public class TodoController {
 
-    @Autowired
-    private TodoService todoService;
+    @Autowired private TodoService todoService;
 
     // 获取当前登录用户的所有待办（包含日常与需求待办）
     @GetMapping
@@ -32,7 +31,8 @@ public class TodoController {
 
     // 更新待办
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTodo(@PathVariable Long id, @RequestBody TodoDTO dto, HttpServletRequest request) {
+    public ResponseEntity<?> updateTodo(
+            @PathVariable Long id, @RequestBody TodoDTO dto, HttpServletRequest request) {
         try {
             var userId = (Long) request.getAttribute("userId");
             var updated = todoService.updateTodo(id, dto, userId);

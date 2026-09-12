@@ -3,16 +3,15 @@ package com.reqflow.service.impl;
 import com.reqflow.entity.Discussion;
 import com.reqflow.repository.DiscussionRepository;
 import com.reqflow.service.DiscussionService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 public class DiscussionServiceImpl implements DiscussionService {
 
-    @Autowired
-    private DiscussionRepository discussionRepository;
+    @Autowired private DiscussionRepository discussionRepository;
 
     @Override
     @Transactional(readOnly = true) // 只读事务，提高查询吞吐量

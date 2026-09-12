@@ -1,9 +1,9 @@
 package com.reqflow.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 @Entity
@@ -24,7 +24,7 @@ public class Requirement {
     private LocalDate startDate; // 新增需求开始时间
 
     @Column(name = "end_date")
-    private LocalDate endDate;   // 新增需求结束时间
+    private LocalDate endDate; // 新增需求结束时间
 
     @Column(name = "creator_id")
     private Long creatorId;

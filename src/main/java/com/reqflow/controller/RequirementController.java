@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/requirements")
 public class RequirementController {
 
-    @Autowired
-    private RequirementService requirementService;
+    @Autowired private RequirementService requirementService;
 
     @GetMapping
     public ResponseEntity<?> getMyRequirements(
@@ -24,14 +23,16 @@ public class RequirementController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createRequirement(@RequestBody Requirement requirement, HttpServletRequest request) {
+    public ResponseEntity<?> createRequirement(
+            @RequestBody Requirement requirement, HttpServletRequest request) {
         var userId = (Long) request.getAttribute("userId");
         var created = requirementService.createRequirement(requirement, userId);
         return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateRequirement(@PathVariable Long id, @RequestBody Requirement requirement) {
+    public ResponseEntity<?> updateRequirement(
+            @PathVariable Long id, @RequestBody Requirement requirement) {
         try {
             var updated = requirementService.updateRequirement(id, requirement);
             return ResponseEntity.ok(updated);

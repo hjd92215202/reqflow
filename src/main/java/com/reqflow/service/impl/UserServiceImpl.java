@@ -5,16 +5,15 @@ import com.reqflow.entity.User;
 import com.reqflow.repository.UserRepository;
 import com.reqflow.service.UserService;
 import com.reqflow.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository userRepository;
 
     @Override
     public void register(User user, String plainPassword) {
@@ -27,8 +26,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Object> login(LoginRequest loginRequest) {
-        var user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        var user =
+                userRepository
+                        .findByUsername(loginRequest.getUsername())
+                        .orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
         if (!JwtUtil.checkPassword(loginRequest.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Invalid username or password");

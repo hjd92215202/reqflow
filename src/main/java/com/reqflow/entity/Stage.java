@@ -1,9 +1,9 @@
 package com.reqflow.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 @Entity

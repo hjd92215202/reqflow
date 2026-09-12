@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/discussions")
 public class DiscussionController {
 
-    @Autowired
-    private DiscussionService discussionService;
+    @Autowired private DiscussionService discussionService;
 
     @GetMapping("/stage/{stageId}") // 语义化路径调整
     public ResponseEntity<?> getByStage(@PathVariable Long stageId) {
@@ -20,7 +19,8 @@ public class DiscussionController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Discussion discussion, HttpServletRequest request) {
+    public ResponseEntity<?> create(
+            @RequestBody Discussion discussion, HttpServletRequest request) {
         var userId = (Long) request.getAttribute("userId");
         var created = discussionService.createDiscussion(discussion, userId);
         return ResponseEntity.ok(created);

@@ -1,14 +1,14 @@
 package com.reqflow.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "req_discussion", indexes = {
-        @Index(name = "idx_discussion_stage_id", columnList = "stage_id")
-})
+@Table(
+        name = "req_discussion",
+        indexes = {@Index(name = "idx_discussion_stage_id", columnList = "stage_id")})
 public class Discussion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

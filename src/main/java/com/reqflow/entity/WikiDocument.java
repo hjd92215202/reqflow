@@ -1,16 +1,18 @@
 package com.reqflow.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "req_wiki_document", indexes = {
-        @Index(name = "idx_wiki_requirement_id", columnList = "requirement_id"),
-        @Index(name = "idx_wiki_parent_id", columnList = "parent_id"),
-        @Index(name = "idx_wiki_share_token", columnList = "share_token") // 新增索引加速检索
-})
+@Table(
+        name = "req_wiki_document",
+        indexes = {
+            @Index(name = "idx_wiki_requirement_id", columnList = "requirement_id"),
+            @Index(name = "idx_wiki_parent_id", columnList = "parent_id"),
+            @Index(name = "idx_wiki_share_token", columnList = "share_token") // 新增索引加速检索
+        })
 public class WikiDocument {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,9 +45,7 @@ public class WikiDocument {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @Transient
-    private String creatorNickname;
+    @Transient private String creatorNickname;
 
-    @Transient
-    private String requirementTitle;
+    @Transient private String requirementTitle;
 }
