@@ -1,29 +1,10 @@
 {
   "name": "reqflow",
-  "version": "1.0.0",
-  "description": "**ReqFlow** 是一个专注于工作需求记录、阶段拆解与协作协同的管理系统。\r 本项目为 ReqFlow 的**后端服务**，基于 `Java 21` + `Spring Boot 3` + `PostgreSQL` 构建。",
   "main": "commitlint.config.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.java": [
-      "mvn spotless:apply"
-    ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hjd92215202/reqflow.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/hjd92215202/reqflow/issues"
-  },
-  "homepage": "https://github.com/hjd92215202/reqflow#readme",
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
