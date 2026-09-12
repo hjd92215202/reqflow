@@ -9,5 +9,10 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       # 生产环境强烈建议设为 update（配合首次建表）或 validate，此处设为 update 方便小白用户一键拉起无需手动跑 sql
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true       # 生产环境平滑接入
+    baseline-version: 1.0.0
+    locations: classpath:db/migration

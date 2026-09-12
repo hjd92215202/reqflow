@@ -7,8 +7,13 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update              # 自动检测并更新表结构，开发阶段非常实用
+      ddl-auto: validate              # 自动检测并更新表结构，开发阶段非常实用
     show-sql: true                  # 在控制台打印 SQL 语句，方便调试
     properties:
       hibernate:
         format_sql: true            # 格式化打印的 SQL，使其清晰易读
+  flyway:
+    enabled: true
+    baseline-on-migrate: true       # 核心：线上已有数据时自动设为基线，不破坏已有表和数据
+    baseline-version: 1.0.0         # 从 1.0.0 开始纳管
+    locations: classpath:db/migration

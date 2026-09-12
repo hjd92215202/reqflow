@@ -51,6 +51,10 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
         <!-- CommonMark 核心与 GFM 扩展集合 -->
         <dependency>
             <groupId>org.commonmark</groupId>
