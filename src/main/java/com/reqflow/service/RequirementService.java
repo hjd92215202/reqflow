@@ -8,7 +8,7 @@ public interface RequirementService {
 
     Requirement createRequirement(Requirement requirement, Long creatorId);
 
-    Requirement updateRequirement(Long id, Requirement reqDetails);
+    Requirement updateRequirement(Long id, Requirement reqDetails, Long userId);
 
-    void deleteRequirement(Long id);
+    void deleteRequirement(Long id, Long userId);
 }

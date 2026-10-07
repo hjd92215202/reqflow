@@ -2,6 +2,7 @@ package com.reqflow.service.impl;
 
 import com.reqflow.entity.Requirement;
 import com.reqflow.repository.*;
+import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.RequirementService;
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Autowired private WikiDocumentRepository wikiDocumentRepository;
 
+    @Autowired private RequirementAccessService requirementAccessService;
+
     @Override
     @Transactional(readOnly = true)
     public Page<Requirement> getRequirementsByCreator(Long creatorId, int page, int size) {
@@ -41,7 +44,8 @@ public class RequirementServiceImpl implements RequirementService {
     }
 
     @Override
-    public Requirement updateRequirement(Long id, Requirement reqDetails) {
+    public Requirement updateRequirement(Long id, Requirement reqDetails, Long userId) {
+        requirementAccessService.requireRequirementOwner(id, userId);
         var existing =
                 requirementRepository
                         .findById(id)
@@ -59,7 +63,8 @@ public class RequirementServiceImpl implements RequirementService {
     }
 
     @Override
-    public void deleteRequirement(Long id) {
+    public void deleteRequirement(Long id, Long userId) {
+        requirementAccessService.requireRequirementOwner(id, userId);
         // 1. 清理需求阶段及子任务
         var stages = stageRepository.findByRequirementIdOrderByIdAsc(id);
         for (var stage : stages) {

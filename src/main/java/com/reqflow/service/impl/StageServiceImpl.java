@@ -4,6 +4,7 @@ import com.reqflow.entity.Stage;
 import com.reqflow.repository.DiscussionRepository;
 import com.reqflow.repository.StageRepository;
 import com.reqflow.repository.SubTaskRepository;
+import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.StageService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,20 +22,25 @@ public class StageServiceImpl implements StageService {
 
     @Autowired private DiscussionRepository discussionRepository; // 优化引入：注入日志仓库用于级联删除
 
+    @Autowired private RequirementAccessService requirementAccessService;
+
     @Override
     @Transactional(readOnly = true) // 优化引入：只读事务优化，绕过 Hibernate 脏检查，提升读吞吐量
-    public List<Stage> getStagesByRequirement(Long requirementId) {
+    public List<Stage> getStagesByRequirement(Long requirementId, Long userId) {
+        requirementAccessService.requireRequirementOwner(requirementId, userId);
         return stageRepository.findByRequirementIdOrderByIdAsc(requirementId);
     }
 
     @Override
-    public Stage createStage(Stage stage) {
+    public Stage createStage(Stage stage, Long userId) {
+        requirementAccessService.requireRequirementOwner(stage.getRequirementId(), userId);
         if (stage.getStatus() == null) stage.setStatus("TODO");
         return stageRepository.save(stage);
     }
 
     @Override
-    public Stage updateStage(Long id, Stage stageDetails) {
+    public Stage updateStage(Long id, Stage stageDetails, Long userId) {
+        requirementAccessService.requireStageOwner(id, userId);
         var existing =
                 stageRepository
                         .findById(id)
@@ -48,7 +54,8 @@ public class StageServiceImpl implements StageService {
     }
 
     @Override
-    public void deleteStage(Long id) {
+    public void deleteStage(Long id, Long userId) {
+        requirementAccessService.requireStageOwner(id, userId);
         // 优化：在物理删除阶段本身之前，先行一键物理删除其关联的所有子任务及日志（防数据孤儿）
         subTaskRepository.deleteByStageId(id);
         discussionRepository.deleteByStageId(id);

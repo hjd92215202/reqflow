@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/requirements")
@@ -32,21 +33,33 @@ public class RequirementController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateRequirement(
-            @PathVariable Long id, @RequestBody Requirement requirement) {
+            @PathVariable Long id,
+            @RequestBody Requirement requirement,
+            HttpServletRequest request) {
         try {
-            var updated = requirementService.updateRequirement(id, requirement);
+            var userId = (Long) request.getAttribute("userId");
+            var updated = requirementService.updateRequirement(id, requirement, userId);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
+            if (e instanceof ResponseStatusException responseStatusException) {
+                return ResponseEntity.status(responseStatusException.getStatusCode())
+                        .body(responseStatusException.getReason());
+            }
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteRequirement(@PathVariable Long id) {
+    public ResponseEntity<?> deleteRequirement(@PathVariable Long id, HttpServletRequest request) {
         try {
-            requirementService.deleteRequirement(id);
+            var userId = (Long) request.getAttribute("userId");
+            requirementService.deleteRequirement(id, userId);
             return ResponseEntity.ok("Delete successful");
         } catch (Exception e) {
+            if (e instanceof ResponseStatusException responseStatusException) {
+                return ResponseEntity.status(responseStatusException.getStatusCode())
+                        .body(responseStatusException.getReason());
+            }
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
