@@ -18,9 +18,11 @@ public class RequirementController {
     public ResponseEntity<?> getMyRequirements(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long projectId,
             HttpServletRequest request) {
         var userId = (Long) request.getAttribute("userId");
-        return ResponseEntity.ok(requirementService.getRequirementsByCreator(userId, page, size));
+        return ResponseEntity.ok(
+                requirementService.getRequirementsByCreator(userId, projectId, page, size));
     }
 
     @PostMapping

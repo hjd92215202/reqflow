@@ -30,13 +30,20 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Requirement> getRequirementsByCreator(Long creatorId, int page, int size) {
+    public Page<Requirement> getRequirementsByCreator(
+            Long creatorId, Long projectId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
+        if (projectId != null) {
+            requirementAccessService.requireProjectOwner(projectId, creatorId);
+            return requirementRepository.findByCreatorIdAndProjectIdOrderByIdDesc(
+                    creatorId, projectId, pageable);
+        }
         return requirementRepository.findByCreatorIdOrderByIdDesc(creatorId, pageable);
     }
 
     @Override
     public Requirement createRequirement(Requirement requirement, Long creatorId) {
+        requirementAccessService.requireProjectOwner(requirement.getProjectId(), creatorId);
         requirement.setCreatorId(creatorId);
         if (requirement.getStatus() == null) requirement.setStatus("TODO");
         if (requirement.getPriority() == null) requirement.setPriority("MEDIUM");
@@ -46,6 +53,7 @@ public class RequirementServiceImpl implements RequirementService {
     @Override
     public Requirement updateRequirement(Long id, Requirement reqDetails, Long userId) {
         requirementAccessService.requireRequirementOwner(id, userId);
+        requirementAccessService.requireProjectOwner(reqDetails.getProjectId(), userId);
         var existing =
                 requirementRepository
                         .findById(id)
@@ -57,6 +65,9 @@ public class RequirementServiceImpl implements RequirementService {
         existing.setPriority(reqDetails.getPriority());
         existing.setStartDate(reqDetails.getStartDate());
         existing.setEndDate(reqDetails.getEndDate());
+        if (reqDetails.getProjectId() != null) {
+            existing.setProjectId(reqDetails.getProjectId());
+        }
         existing.setUpdatedAt(LocalDateTime.now());
 
         return requirementRepository.save(existing);

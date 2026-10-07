@@ -18,6 +18,14 @@ public class RequirementAccessService {
 
     @Autowired private SubTaskRepository subTaskRepository;
 
+    @Autowired private WorkspaceProjectService workspaceProjectService;
+
+    public void requireProjectOwner(Long projectId, Long userId) {
+        if (projectId != null) {
+            workspaceProjectService.requireProjectOwner(projectId, userId);
+        }
+    }
+
     public void requireRequirementOwner(Long requirementId, Long userId) {
         boolean ownsRequirement =
                 requirementId != null

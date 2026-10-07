@@ -10,4 +10,7 @@ public interface RequirementRepository extends JpaRepository<Requirement, Long> 
     List<Requirement> findByCreatorIdOrderByIdDesc(Long creatorId);
 
     Page<Requirement> findByCreatorIdOrderByIdDesc(Long creatorId, Pageable pageable);
+
+    Page<Requirement> findByCreatorIdAndProjectIdOrderByIdDesc(
+            Long creatorId, Long projectId, Pageable pageable);
 }
