@@ -3,6 +3,7 @@ package com.reqflow.service;
 import com.reqflow.repository.RequirementRepository;
 import com.reqflow.repository.StageRepository;
 import com.reqflow.repository.SubTaskRepository;
+import com.reqflow.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,8 @@ public class RequirementAccessService {
     @Autowired private StageRepository stageRepository;
 
     @Autowired private SubTaskRepository subTaskRepository;
+
+    @Autowired private UserRepository userRepository;
 
     @Autowired private WorkspaceProjectService workspaceProjectService;
 
@@ -71,5 +74,51 @@ public class RequirementAccessService {
                         .map(stage -> stage.getRequirementId())
                         .orElse(null);
         requireRequirementOwner(requirementId, userId);
+    }
+
+    public void requireSubTaskOwnerOrAssignee(Long subTaskId, Long userId) {
+        var task =
+                subTaskRepository
+                        .findById(subTaskId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND, "Task not found"));
+        Long requirementId =
+                stageRepository
+                        .findById(task.getStageId())
+                        .map(stage -> stage.getRequirementId())
+                        .orElse(null);
+        boolean isOwner =
+                requirementId != null
+                        && userId != null
+                        && userId.equals(
+                                requirementRepository
+                                        .findById(requirementId)
+                                        .map(requirement -> requirement.getCreatorId())
+                                        .orElse(null));
+        if (isOwner) {
+            return;
+        }
+
+        boolean isAssignee =
+                userId != null
+                        && task.getAssignee() != null
+                        && userRepository
+                                .findById(userId)
+                                .map(
+                                        user -> {
+                                            String assignee = task.getAssignee().trim();
+                                            return (user.getNickname() != null
+                                                            && assignee.equalsIgnoreCase(
+                                                                    user.getNickname().trim()))
+                                                    || (user.getUsername() != null
+                                                            && assignee.equalsIgnoreCase(
+                                                                    user.getUsername().trim()));
+                                        })
+                                .orElse(false);
+        if (!isAssignee) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permission denied");
+        }
     }
 }

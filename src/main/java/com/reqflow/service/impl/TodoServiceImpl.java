@@ -6,6 +6,7 @@ import com.reqflow.entity.Stage;
 import com.reqflow.entity.SubTask;
 import com.reqflow.entity.Todo;
 import com.reqflow.repository.*;
+import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.TodoService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ public class TodoServiceImpl implements TodoService {
     @Autowired private StageRepository stageRepository;
 
     @Autowired private RequirementRepository requirementRepository;
+
+    @Autowired private RequirementAccessService requirementAccessService;
 
     @Override
     @Transactional(readOnly = true)
@@ -144,6 +147,7 @@ public class TodoServiceImpl implements TodoService {
     public TodoDTO updateTodo(Long id, TodoDTO dto, Long userId) {
         if (Boolean.TRUE.equals(dto.getIsProjectTask())) {
             // 更新矩阵子任务
+            requirementAccessService.requireSubTaskOwnerOrAssignee(id, userId);
             SubTask subTask =
                     subTaskRepository
                             .findById(id)
@@ -180,6 +184,7 @@ public class TodoServiceImpl implements TodoService {
         dto.setIsProjectTask(isProjectTask);
 
         if (Boolean.TRUE.equals(isProjectTask)) {
+            requirementAccessService.requireSubTaskOwnerOrAssignee(id, userId);
             SubTask subTask =
                     subTaskRepository
                             .findById(id)
@@ -209,8 +214,16 @@ public class TodoServiceImpl implements TodoService {
     @Override
     public void deleteTodo(Long id, Boolean isProjectTask, Long userId) {
         if (Boolean.TRUE.equals(isProjectTask)) {
-            // 需求待办解绑或删除子任务
-            subTaskRepository.deleteById(id);
+            requirementAccessService.requireSubTaskOwnerOrAssignee(id, userId);
+            SubTask subTask =
+                    subTaskRepository
+                            .findById(id)
+                            .orElseThrow(() -> new RuntimeException("SubTask not found"));
+            // Removing an assigned task from My Work clears its assignment without deleting the
+            // team task.
+            subTask.setAssignee(null);
+            subTask.setUpdatedAt(LocalDateTime.now());
+            subTaskRepository.save(subTask);
         } else {
             Todo existing =
                     todoRepository

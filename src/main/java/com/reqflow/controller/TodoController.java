@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/todos")
@@ -38,6 +39,10 @@ public class TodoController {
             var updated = todoService.updateTodo(id, dto, userId);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
+            if (e instanceof ResponseStatusException responseStatusException) {
+                return ResponseEntity.status(responseStatusException.getStatusCode())
+                        .body(responseStatusException.getReason());
+            }
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -53,6 +58,10 @@ public class TodoController {
             var toggled = todoService.toggleTodoStatus(id, isProjectTask, userId);
             return ResponseEntity.ok(toggled);
         } catch (Exception e) {
+            if (e instanceof ResponseStatusException responseStatusException) {
+                return ResponseEntity.status(responseStatusException.getStatusCode())
+                        .body(responseStatusException.getReason());
+            }
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -68,6 +77,10 @@ public class TodoController {
             todoService.deleteTodo(id, isProjectTask, userId);
             return ResponseEntity.ok("Delete successful");
         } catch (Exception e) {
+            if (e instanceof ResponseStatusException responseStatusException) {
+                return ResponseEntity.status(responseStatusException.getStatusCode())
+                        .body(responseStatusException.getReason());
+            }
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
