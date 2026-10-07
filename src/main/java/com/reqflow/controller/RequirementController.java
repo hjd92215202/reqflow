@@ -25,6 +25,12 @@ public class RequirementController {
                 requirementService.getRequirementsByCreator(userId, projectId, page, size));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable Long id, HttpServletRequest request) {
+        var userId = (Long) request.getAttribute("userId");
+        return ResponseEntity.ok(requirementService.getRequirementById(id, userId));
+    }
+
     @PostMapping
     public ResponseEntity<?> createRequirement(
             @RequestBody Requirement requirement, HttpServletRequest request) {

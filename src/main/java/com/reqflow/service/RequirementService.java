@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 public interface RequirementService {
     Page<Requirement> getRequirementsByCreator(Long creatorId, Long projectId, int page, int size);
 
+    Requirement getRequirementById(Long id, Long userId);
+
     Requirement createRequirement(Requirement requirement, Long creatorId);
 
     Requirement updateRequirement(Long id, Requirement reqDetails, Long userId);

@@ -42,6 +42,15 @@ public class RequirementServiceImpl implements RequirementService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Requirement getRequirementById(Long id, Long userId) {
+        requirementAccessService.requireRequirementOwner(id, userId);
+        return requirementRepository
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException("Requirement not found"));
+    }
+
+    @Override
     public Requirement createRequirement(Requirement requirement, Long creatorId) {
         requirementAccessService.requireProjectOwner(requirement.getProjectId(), creatorId);
         requirement.setCreatorId(creatorId);
