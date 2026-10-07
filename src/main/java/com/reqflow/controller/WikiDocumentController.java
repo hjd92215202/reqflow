@@ -39,10 +39,14 @@ public class WikiDocumentController {
 
     // 1. 获取/生成指定文档的安全分享 Token (需要登录认证)
     @PostMapping("/api/wikis/{id}/share-token")
-    public ResponseEntity<?> getOrCreateShareToken(@PathVariable Long id) {
+    public ResponseEntity<?> getOrCreateShareToken(
+            @PathVariable Long id, HttpServletRequest request) {
         try {
-            String token = wikiDocumentService.getOrCreateShareToken(id);
+            Long userId = (Long) request.getAttribute("userId");
+            String token = wikiDocumentService.getOrCreateShareToken(id, userId);
             return ResponseEntity.ok(Map.of("shareToken", token));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -142,23 +146,34 @@ public class WikiDocumentController {
     public ResponseEntity<?> create(
             @RequestBody WikiDocument document, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        return ResponseEntity.ok(wikiDocumentService.createWikiDocument(document, userId));
+        try {
+            return ResponseEntity.ok(wikiDocumentService.createWikiDocument(document, userId));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        }
     }
 
     @PutMapping("/api/wikis/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody WikiDocument document) {
+    public ResponseEntity<?> update(
+            @PathVariable Long id, @RequestBody WikiDocument document, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(wikiDocumentService.updateWikiDocument(id, document));
+            Long userId = (Long) request.getAttribute("userId");
+            return ResponseEntity.ok(wikiDocumentService.updateWikiDocument(id, document, userId));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @DeleteMapping("/api/wikis/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id, HttpServletRequest request) {
         try {
-            wikiDocumentService.deleteWikiDocument(id);
+            Long userId = (Long) request.getAttribute("userId");
+            wikiDocumentService.deleteWikiDocument(id, userId);
             return ResponseEntity.ok("Delete successful");
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

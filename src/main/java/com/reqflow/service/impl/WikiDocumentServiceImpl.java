@@ -6,6 +6,7 @@ import com.reqflow.entity.WikiDocument;
 import com.reqflow.repository.RequirementRepository;
 import com.reqflow.repository.UserRepository;
 import com.reqflow.repository.WikiDocumentRepository;
+import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.WikiDocumentService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,8 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
     @Autowired private UserRepository userRepository;
 
     @Autowired private RequirementRepository requirementRepository;
+
+    @Autowired private RequirementAccessService requirementAccessService;
 
     @Override
     @Transactional(readOnly = true)
@@ -79,6 +82,10 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
 
     @Override
     public WikiDocument createWikiDocument(WikiDocument document, Long userId) {
+        if (document.getRequirementId() != null) {
+            requirementAccessService.requireRequirementOwner(document.getRequirementId(), userId);
+        }
+        requireParentMutationAccess(document.getParentId(), userId);
         document.setCreatorId(userId);
         if (document.getTitle() == null || document.getTitle().trim().isEmpty()) {
             document.setTitle("未命名知识文档");
@@ -87,11 +94,17 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
     }
 
     @Override
-    public WikiDocument updateWikiDocument(Long id, WikiDocument details) {
-        WikiDocument existing =
-                wikiDocumentRepository
-                        .findById(id)
-                        .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+    public WikiDocument updateWikiDocument(Long id, WikiDocument details, Long userId) {
+        WikiDocument existing = requireDocumentMutationAccess(id, userId);
+        if (details.getRequirementId() != null
+                && !details.getRequirementId().equals(existing.getRequirementId())) {
+            requirementAccessService.requireRequirementOwner(details.getRequirementId(), userId);
+        }
+        requireParentMutationAccess(details.getParentId(), userId);
+        if (details.getRequirementId() == null && !userId.equals(existing.getCreatorId())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "Permission denied");
+        }
         existing.setTitle(details.getTitle());
         existing.setContent(details.getContent());
         existing.setTags(details.getTags());
@@ -102,21 +115,19 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
     }
 
     @Override
-    public void deleteWikiDocument(Long id) {
+    public void deleteWikiDocument(Long id, Long userId) {
+        requireDocumentMutationAccess(id, userId);
         List<WikiDocument> children = wikiDocumentRepository.findByParentId(id);
         for (WikiDocument child : children) {
-            deleteWikiDocument(child.getId());
+            deleteWikiDocument(child.getId(), userId);
         }
         wikiDocumentRepository.deleteById(id);
     }
 
     // 核心实现：生成或获取不可预测的高强度 16 位随机分享令牌
     @Override
-    public String getOrCreateShareToken(Long id) {
-        WikiDocument doc =
-                wikiDocumentRepository
-                        .findById(id)
-                        .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+    public String getOrCreateShareToken(Long id, Long userId) {
+        WikiDocument doc = requireDocumentMutationAccess(id, userId);
         if (doc.getShareToken() == null || doc.getShareToken().trim().isEmpty()) {
             // 生成 16 位全局唯一的十六进制随机字符串
             String token = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -124,6 +135,24 @@ public class WikiDocumentServiceImpl implements WikiDocumentService {
             wikiDocumentRepository.save(doc);
         }
         return doc.getShareToken();
+    }
+
+    private WikiDocument requireDocumentMutationAccess(Long id, Long userId) {
+        WikiDocument document =
+                wikiDocumentRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Wiki document not found"));
+        if (userId != null && userId.equals(document.getCreatorId())) {
+            return document;
+        }
+        requirementAccessService.requireRequirementOwner(document.getRequirementId(), userId);
+        return document;
+    }
+
+    private void requireParentMutationAccess(Long parentId, Long userId) {
+        if (parentId != null) {
+            requireDocumentMutationAccess(parentId, userId);
+        }
     }
 
     // 核心实现：仅根据随机 Token 查找文档（完全杜绝通过递增 ID 穷举猜测）

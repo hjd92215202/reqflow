@@ -10,12 +10,12 @@ public interface WikiDocumentService {
 
     WikiDocument createWikiDocument(WikiDocument document, Long userId);
 
-    WikiDocument updateWikiDocument(Long id, WikiDocument details);
+    WikiDocument updateWikiDocument(Long id, WikiDocument details, Long userId);
 
-    void deleteWikiDocument(Long id);
+    void deleteWikiDocument(Long id, Long userId);
 
     // 新增安全分享方法
-    String getOrCreateShareToken(Long id);
+    String getOrCreateShareToken(Long id, Long userId);
 
     WikiDocument getWikiDocumentByShareToken(String shareToken);
 }
