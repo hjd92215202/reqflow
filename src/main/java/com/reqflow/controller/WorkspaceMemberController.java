@@ -1,10 +1,9 @@
 package com.reqflow.controller;
 
 import com.reqflow.dto.AddWorkspaceMemberRequest;
-import com.reqflow.dto.WorkspaceMemberView;
+import com.reqflow.dto.WorkspaceMembersResult;
 import com.reqflow.service.WorkspaceMemberService;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +15,7 @@ public class WorkspaceMemberController {
     @Autowired private WorkspaceMemberService memberService;
 
     @GetMapping
-    public ResponseEntity<List<WorkspaceMemberView>> list(
+    public ResponseEntity<WorkspaceMembersResult> list(
             @PathVariable Long workspaceId, HttpServletRequest request) {
         return ResponseEntity.ok(memberService.list(workspaceId, userId(request)));
     }

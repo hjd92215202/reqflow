@@ -1,6 +1,7 @@
 package com.reqflow.service;
 
 import com.reqflow.dto.WorkspaceMemberView;
+import com.reqflow.dto.WorkspaceMembersResult;
 import com.reqflow.entity.WorkspaceMember;
 import com.reqflow.repository.UserRepository;
 import com.reqflow.repository.WorkspaceMemberRepository;
@@ -19,27 +20,31 @@ public class WorkspaceMemberService {
     @Autowired private WorkspaceProjectService workspaceProjectService;
 
     @Transactional(readOnly = true)
-    public List<WorkspaceMemberView> list(Long workspaceId, Long userId) {
+    public WorkspaceMembersResult list(Long workspaceId, Long userId) {
         workspaceProjectService.requireWorkspaceAccess(workspaceId, userId);
-        return memberRepository.findByWorkspaceIdOrderByCreatedAtAsc(workspaceId).stream()
-                .map(
-                        member ->
-                                userRepository
-                                        .findById(member.getUserId())
-                                        .map(
-                                                user ->
-                                                        new WorkspaceMemberView(
-                                                                user.getId(),
-                                                                user.getUsername(),
-                                                                user.getNickname() == null
-                                                                                || user.getNickname()
-                                                                                        .isBlank()
-                                                                        ? user.getUsername()
-                                                                        : user.getNickname(),
-                                                                member.getRole()))
-                                        .orElse(null))
-                .filter(java.util.Objects::nonNull)
-                .toList();
+        List<WorkspaceMemberView> members =
+                memberRepository.findByWorkspaceIdOrderByCreatedAtAsc(workspaceId).stream()
+                        .map(
+                                member ->
+                                        userRepository
+                                                .findById(member.getUserId())
+                                                .map(
+                                                        user ->
+                                                                new WorkspaceMemberView(
+                                                                        user.getId(),
+                                                                        user.getUsername(),
+                                                                        user.getNickname() == null
+                                                                                        || user.getNickname()
+                                                                                                .isBlank()
+                                                                                ? user.getUsername()
+                                                                                : user
+                                                                                        .getNickname(),
+                                                                        member.getRole()))
+                                                .orElse(null))
+                        .filter(java.util.Objects::nonNull)
+                        .toList();
+        return new WorkspaceMembersResult(
+                workspaceProjectService.isWorkspaceOwner(workspaceId, userId), members);
     }
 
     public WorkspaceMemberView add(Long workspaceId, String username, Long actorId) {
