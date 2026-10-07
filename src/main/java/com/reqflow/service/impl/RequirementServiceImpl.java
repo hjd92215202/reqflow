@@ -2,6 +2,7 @@ package com.reqflow.service.impl;
 
 import com.reqflow.entity.Requirement;
 import com.reqflow.repository.*;
+import com.reqflow.service.ActivityLogService;
 import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.RequirementService;
 import java.time.LocalDateTime;
@@ -28,6 +29,8 @@ public class RequirementServiceImpl implements RequirementService {
 
     @Autowired private RequirementAccessService requirementAccessService;
 
+    @Autowired private ActivityLogService activityLogService;
+
     @Override
     @Transactional(readOnly = true)
     public Page<Requirement> getRequirementsByCreator(
@@ -35,10 +38,10 @@ public class RequirementServiceImpl implements RequirementService {
         Pageable pageable = PageRequest.of(page, size);
         if (projectId != null) {
             requirementAccessService.requireProjectOwner(projectId, creatorId);
-            return requirementRepository.findByCreatorIdAndProjectIdOrderByIdDesc(
+            return requirementRepository.findAccessibleByUserAndProject(
                     creatorId, projectId, pageable);
         }
-        return requirementRepository.findByCreatorIdOrderByIdDesc(creatorId, pageable);
+        return requirementRepository.findAccessibleByUser(creatorId, pageable);
     }
 
     @Override
@@ -56,7 +59,15 @@ public class RequirementServiceImpl implements RequirementService {
         requirement.setCreatorId(creatorId);
         if (requirement.getStatus() == null) requirement.setStatus("TODO");
         if (requirement.getPriority() == null) requirement.setPriority("MEDIUM");
-        return requirementRepository.save(requirement);
+        Requirement saved = requirementRepository.save(requirement);
+        activityLogService.record(
+                saved.getId(),
+                creatorId,
+                "REQUIREMENT",
+                saved.getId(),
+                "CREATE",
+                "创建了需求「" + saved.getTitle() + "」");
+        return saved;
     }
 
     @Override
@@ -67,6 +78,8 @@ public class RequirementServiceImpl implements RequirementService {
                 requirementRepository
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        boolean statusChanged =
+                !java.util.Objects.equals(existing.getStatus(), reqDetails.getStatus());
 
         existing.setTitle(reqDetails.getTitle());
         existing.setDescription(reqDetails.getDescription());
@@ -79,12 +92,26 @@ public class RequirementServiceImpl implements RequirementService {
         }
         existing.setUpdatedAt(LocalDateTime.now());
 
-        return requirementRepository.save(existing);
+        Requirement saved = requirementRepository.save(existing);
+        activityLogService.record(
+                id,
+                userId,
+                "REQUIREMENT",
+                id,
+                statusChanged ? "STATUS" : "UPDATE",
+                "更新了需求「" + saved.getTitle() + "」");
+        return saved;
     }
 
     @Override
     public void deleteRequirement(Long id, Long userId) {
         requirementAccessService.requireRequirementOwner(id, userId);
+        Requirement requirement =
+                requirementRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        activityLogService.record(
+                id, userId, "REQUIREMENT", id, "DELETE", "删除了需求「" + requirement.getTitle() + "」");
         // 1. 清理需求阶段及子任务
         var stages = stageRepository.findByRequirementIdOrderByIdAsc(id);
         for (var stage : stages) {

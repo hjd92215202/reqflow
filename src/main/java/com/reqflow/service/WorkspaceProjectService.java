@@ -4,6 +4,7 @@ import com.reqflow.entity.Project;
 import com.reqflow.entity.Workspace;
 import com.reqflow.repository.ProjectRepository;
 import com.reqflow.repository.UserRepository;
+import com.reqflow.repository.WorkspaceMemberRepository;
 import com.reqflow.repository.WorkspaceRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +23,22 @@ public class WorkspaceProjectService {
 
     @Autowired private UserRepository userRepository;
 
+    @Autowired private WorkspaceMemberRepository workspaceMemberRepository;
+
     @Transactional(readOnly = true)
     public List<Workspace> getWorkspaces(Long userId) {
-        return workspaceRepository.findByOwnerIdOrderByIdAsc(userId);
+        java.util.LinkedHashMap<Long, Workspace> workspaces = new java.util.LinkedHashMap<>();
+        workspaceRepository
+                .findByOwnerIdOrderByIdAsc(userId)
+                .forEach(w -> workspaces.put(w.getId(), w));
+        workspaceMemberRepository
+                .findByUserIdOrderByWorkspaceIdAsc(userId)
+                .forEach(
+                        member ->
+                                workspaceRepository
+                                        .findById(member.getWorkspaceId())
+                                        .ifPresent(w -> workspaces.put(w.getId(), w)));
+        return List.copyOf(workspaces.values());
     }
 
     public Workspace createWorkspace(Workspace workspace, Long userId) {
@@ -41,7 +55,7 @@ public class WorkspaceProjectService {
 
     @Transactional(readOnly = true)
     public List<Project> getProjects(Long workspaceId, Long userId) {
-        requireWorkspaceOwner(workspaceId, userId);
+        requireWorkspaceAccess(workspaceId, userId);
         return projectRepository.findByWorkspaceIdOrderByIdAsc(workspaceId);
     }
 
@@ -85,10 +99,45 @@ public class WorkspaceProjectService {
         }
     }
 
+    public boolean isWorkspaceOwner(Long workspaceId, Long userId) {
+        return workspaceId != null
+                && userId != null
+                && workspaceRepository
+                        .findById(workspaceId)
+                        .map(workspace -> userId.equals(workspace.getOwnerId()))
+                        .orElse(false);
+    }
+
+    public boolean hasWorkspaceAccess(Long workspaceId, Long userId) {
+        return isWorkspaceOwner(workspaceId, userId)
+                || (workspaceId != null
+                        && userId != null
+                        && workspaceMemberRepository.existsByWorkspaceIdAndUserId(
+                                workspaceId, userId));
+    }
+
+    public void requireWorkspaceAccess(Long workspaceId, Long userId) {
+        if (!hasWorkspaceAccess(workspaceId, userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permission denied");
+        }
+    }
+
     public void requireProjectOwner(Long projectId, Long userId) {
         Long workspaceId =
                 projectRepository.findById(projectId).map(Project::getWorkspaceId).orElse(null);
         requireWorkspaceOwner(workspaceId, userId);
+    }
+
+    public void requireProjectAccess(Long projectId, Long userId) {
+        Long workspaceId =
+                projectRepository.findById(projectId).map(Project::getWorkspaceId).orElse(null);
+        requireWorkspaceAccess(workspaceId, userId);
+    }
+
+    public boolean hasProjectAccess(Long projectId, Long userId) {
+        Long workspaceId =
+                projectRepository.findById(projectId).map(Project::getWorkspaceId).orElse(null);
+        return hasWorkspaceAccess(workspaceId, userId);
     }
 
     public void ensureDefaultWorkspace(Long userId) {

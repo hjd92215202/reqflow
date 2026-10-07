@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Enforces the current ownership model: only a requirement's creator can access its work. */
+/** Enforces access inherited from the workspace that contains the requirement. */
 @Service
 public class RequirementAccessService {
 
@@ -25,19 +25,26 @@ public class RequirementAccessService {
 
     public void requireProjectOwner(Long projectId, Long userId) {
         if (projectId != null) {
-            workspaceProjectService.requireProjectOwner(projectId, userId);
+            workspaceProjectService.requireProjectAccess(projectId, userId);
         }
     }
 
     public void requireRequirementOwner(Long requirementId, Long userId) {
-        boolean ownsRequirement =
+        boolean canAccessRequirement =
                 requirementId != null
                         && userId != null
                         && requirementRepository
                                 .findById(requirementId)
-                                .map(requirement -> userId.equals(requirement.getCreatorId()))
+                                .map(
+                                        requirement -> {
+                                            if (userId.equals(requirement.getCreatorId()))
+                                                return true;
+                                            return requirement.getProjectId() != null
+                                                    && workspaceProjectService.hasProjectAccess(
+                                                            requirement.getProjectId(), userId);
+                                        })
                                 .orElse(false);
-        if (!ownsRequirement) {
+        if (!canAccessRequirement) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Permission denied");
         }
     }
@@ -89,15 +96,22 @@ public class RequirementAccessService {
                         .findById(task.getStageId())
                         .map(stage -> stage.getRequirementId())
                         .orElse(null);
-        boolean isOwner =
+        boolean hasAccess =
                 requirementId != null
                         && userId != null
-                        && userId.equals(
-                                requirementRepository
-                                        .findById(requirementId)
-                                        .map(requirement -> requirement.getCreatorId())
-                                        .orElse(null));
-        if (isOwner) {
+                        && requirementRepository
+                                .findById(requirementId)
+                                .map(
+                                        requirement ->
+                                                userId.equals(requirement.getCreatorId())
+                                                        || (requirement.getProjectId() != null
+                                                                && workspaceProjectService
+                                                                        .hasProjectAccess(
+                                                                                requirement
+                                                                                        .getProjectId(),
+                                                                                userId)))
+                                .orElse(false);
+        if (hasAccess) {
             return;
         }
 

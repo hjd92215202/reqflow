@@ -4,6 +4,7 @@ import com.reqflow.entity.Stage;
 import com.reqflow.repository.DiscussionRepository;
 import com.reqflow.repository.StageRepository;
 import com.reqflow.repository.SubTaskRepository;
+import com.reqflow.service.ActivityLogService;
 import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.StageService;
 import java.time.LocalDateTime;
@@ -24,6 +25,8 @@ public class StageServiceImpl implements StageService {
 
     @Autowired private RequirementAccessService requirementAccessService;
 
+    @Autowired private ActivityLogService activityLogService;
+
     @Override
     @Transactional(readOnly = true) // 优化引入：只读事务优化，绕过 Hibernate 脏检查，提升读吞吐量
     public List<Stage> getStagesByRequirement(Long requirementId, Long userId) {
@@ -35,7 +38,15 @@ public class StageServiceImpl implements StageService {
     public Stage createStage(Stage stage, Long userId) {
         requirementAccessService.requireRequirementOwner(stage.getRequirementId(), userId);
         if (stage.getStatus() == null) stage.setStatus("TODO");
-        return stageRepository.save(stage);
+        Stage saved = stageRepository.save(stage);
+        activityLogService.record(
+                saved.getRequirementId(),
+                userId,
+                "STAGE",
+                saved.getId(),
+                "CREATE",
+                "创建了阶段「" + saved.getTitle() + "」");
+        return saved;
     }
 
     @Override
@@ -45,17 +56,38 @@ public class StageServiceImpl implements StageService {
                 stageRepository
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Stage not found"));
+        boolean statusChanged =
+                !java.util.Objects.equals(existing.getStatus(), stageDetails.getStatus());
         existing.setTitle(stageDetails.getTitle());
         existing.setStartDate(stageDetails.getStartDate());
         existing.setEndDate(stageDetails.getEndDate());
         existing.setStatus(stageDetails.getStatus());
         existing.setUpdatedAt(LocalDateTime.now());
-        return stageRepository.save(existing);
+        Stage saved = stageRepository.save(existing);
+        activityLogService.record(
+                saved.getRequirementId(),
+                userId,
+                "STAGE",
+                id,
+                statusChanged ? "STATUS" : "UPDATE",
+                "更新了阶段「" + saved.getTitle() + "」");
+        return saved;
     }
 
     @Override
     public void deleteStage(Long id, Long userId) {
         requirementAccessService.requireStageOwner(id, userId);
+        Stage stage =
+                stageRepository
+                        .findById(id)
+                        .orElseThrow(() -> new RuntimeException("Stage not found"));
+        activityLogService.record(
+                stage.getRequirementId(),
+                userId,
+                "STAGE",
+                id,
+                "DELETE",
+                "删除了阶段「" + stage.getTitle() + "」");
         // 优化：在物理删除阶段本身之前，先行一键物理删除其关联的所有子任务及日志（防数据孤儿）
         subTaskRepository.deleteByStageId(id);
         discussionRepository.deleteByStageId(id);
