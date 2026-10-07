@@ -17,17 +17,19 @@ public interface RequirementRepository extends JpaRepository<Requirement, Long> 
             Long creatorId, Long projectId, Pageable pageable);
 
     @Query(
-            "select r from Requirement r where r.creatorId = :userId or exists "
-                    + "(select p.id from Project p, WorkspaceMember m where p.id = r.projectId "
-                    + "and m.workspaceId = p.workspaceId and m.userId = :userId) "
-                    + "order by r.id desc")
+            "select r from Requirement r where r.creatorId = :userId or exists (select p.id from"
+                + " Project p, Workspace w where p.id = r.projectId and w.id = p.workspaceId and"
+                + " w.ownerId = :userId) or exists (select p.id from Project p, WorkspaceMember m"
+                + " where p.id = r.projectId and m.workspaceId = p.workspaceId and m.userId ="
+                + " :userId) order by r.id desc")
     Page<Requirement> findAccessibleByUser(@Param("userId") Long userId, Pageable pageable);
 
     @Query(
             "select r from Requirement r where r.projectId = :projectId and (r.creatorId = :userId"
-                + " or exists (select p.id from Project p, WorkspaceMember m where p.id ="
-                + " r.projectId and m.workspaceId = p.workspaceId and m.userId = :userId)) order by"
-                + " r.id desc")
+                + " or exists (select p.id from Project p, Workspace w where p.id = r.projectId and"
+                + " w.id = p.workspaceId and w.ownerId = :userId) or exists (select p.id from"
+                + " Project p, WorkspaceMember m where p.id = r.projectId and m.workspaceId ="
+                + " p.workspaceId and m.userId = :userId)) order by r.id desc")
     Page<Requirement> findAccessibleByUserAndProject(
             @Param("userId") Long userId, @Param("projectId") Long projectId, Pageable pageable);
 }
