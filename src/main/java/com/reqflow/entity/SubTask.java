@@ -41,6 +41,9 @@ public class SubTask {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(columnDefinition = "TEXT")
+    private String note = "";
+
     // 原生利用 Hibernate 6 映射 PostgreSQL 的 JSONB 字段
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "custom_fields")

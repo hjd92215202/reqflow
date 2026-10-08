@@ -1,0 +1,2 @@
+ALTER TABLE req_sub_task
+    ADD COLUMN note TEXT NOT NULL DEFAULT '';

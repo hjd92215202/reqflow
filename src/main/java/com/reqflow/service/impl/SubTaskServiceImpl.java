@@ -61,6 +61,10 @@ public class SubTaskServiceImpl implements SubTaskService {
         existing.setStatus(subTaskDetails.getStatus());
         existing.setStartDate(subTaskDetails.getStartDate());
         existing.setEndDate(subTaskDetails.getEndDate());
+        // Preserve notes when older clients update a task without sending this field.
+        if (subTaskDetails.getNote() != null) {
+            existing.setNote(subTaskDetails.getNote());
+        }
         existing.setCustomFields(subTaskDetails.getCustomFields());
         existing.setUpdatedAt(LocalDateTime.now());
         SubTask saved = subTaskRepository.save(existing);
