@@ -1,5 +1,6 @@
 package com.reqflow.controller;
 
+import com.reqflow.dto.StageUpdateRequest;
 import com.reqflow.entity.Stage;
 import com.reqflow.service.StageService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +30,9 @@ public class StageController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
-            @PathVariable Long id, @RequestBody Stage stage, HttpServletRequest request) {
+            @PathVariable Long id,
+            @RequestBody StageUpdateRequest stage,
+            HttpServletRequest request) {
         try {
             var userId = (Long) request.getAttribute("userId");
             return ResponseEntity.ok(stageService.updateStage(id, stage, userId));

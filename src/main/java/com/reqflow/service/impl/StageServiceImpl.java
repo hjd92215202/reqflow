@@ -1,5 +1,6 @@
 package com.reqflow.service.impl;
 
+import com.reqflow.dto.StageUpdateRequest;
 import com.reqflow.entity.Stage;
 import com.reqflow.repository.DiscussionRepository;
 import com.reqflow.repository.StageRepository;
@@ -50,7 +51,7 @@ public class StageServiceImpl implements StageService {
     }
 
     @Override
-    public Stage updateStage(Long id, Stage stageDetails, Long userId) {
+    public Stage updateStage(Long id, StageUpdateRequest stageDetails, Long userId) {
         requirementAccessService.requireStageOwner(id, userId);
         var existing =
                 stageRepository
@@ -58,10 +59,12 @@ public class StageServiceImpl implements StageService {
                         .orElseThrow(() -> new RuntimeException("Stage not found"));
         boolean statusChanged =
                 !java.util.Objects.equals(existing.getStatus(), stageDetails.getStatus());
-        existing.setTitle(stageDetails.getTitle());
-        existing.setStartDate(stageDetails.getStartDate());
-        existing.setEndDate(stageDetails.getEndDate());
-        existing.setStatus(stageDetails.getStatus());
+        // Update requests may contain only the changed fields (for example, status).
+        // Keep required and unrelated values when they are omitted from the payload.
+        if (stageDetails.getTitle() != null) existing.setTitle(stageDetails.getTitle());
+        if (stageDetails.isStartDateProvided()) existing.setStartDate(stageDetails.getStartDate());
+        if (stageDetails.isEndDateProvided()) existing.setEndDate(stageDetails.getEndDate());
+        if (stageDetails.getStatus() != null) existing.setStatus(stageDetails.getStatus());
         existing.setUpdatedAt(LocalDateTime.now());
         Stage saved = stageRepository.save(existing);
         activityLogService.record(
