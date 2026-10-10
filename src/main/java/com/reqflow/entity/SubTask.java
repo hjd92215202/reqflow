@@ -6,11 +6,13 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Data
 @Entity
+@DynamicUpdate
 @Table(
         name = "req_sub_task",
         indexes = {
@@ -43,6 +45,12 @@ public class SubTask {
 
     @Column(columnDefinition = "TEXT")
     private String note = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String deliverable;
+
+    @Column(name = "completion_criteria", columnDefinition = "TEXT")
+    private String completionCriteria;
 
     // 原生利用 Hibernate 6 映射 PostgreSQL 的 JSONB 字段
     @JdbcTypeCode(SqlTypes.JSON)

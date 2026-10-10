@@ -1,5 +1,6 @@
 package com.reqflow.controller;
 
+import com.reqflow.dto.SubTaskUpdateRequest;
 import com.reqflow.entity.SubTask;
 import com.reqflow.service.SubTaskService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +29,9 @@ public class SubTaskController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
-            @PathVariable Long id, @RequestBody SubTask subTask, HttpServletRequest request) {
+            @PathVariable Long id,
+            @RequestBody SubTaskUpdateRequest subTask,
+            HttpServletRequest request) {
         try {
             var userId = (Long) request.getAttribute("userId");
             return ResponseEntity.ok(subTaskService.updateSubTask(id, subTask, userId));

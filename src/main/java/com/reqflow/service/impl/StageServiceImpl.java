@@ -8,6 +8,7 @@ import com.reqflow.repository.SubTaskRepository;
 import com.reqflow.service.ActivityLogService;
 import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.StageService;
+import com.reqflow.util.EngineeringText;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,12 @@ public class StageServiceImpl implements StageService {
     @Override
     public Stage createStage(Stage stage, Long userId) {
         requirementAccessService.requireRequirementOwner(stage.getRequirementId(), userId);
+        // Creation must never merge into a client-selected existing row.
+        stage.setId(null);
         if (stage.getStatus() == null) stage.setStatus("TODO");
+        stage.setGoal(EngineeringText.optional(stage.getGoal()));
+        stage.setExpectedOutput(EngineeringText.optional(stage.getExpectedOutput()));
+        stage.setExitCriteria(EngineeringText.optional(stage.getExitCriteria()));
         Stage saved = stageRepository.save(stage);
         activityLogService.record(
                 saved.getRequirementId(),
@@ -58,13 +64,21 @@ public class StageServiceImpl implements StageService {
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("Stage not found"));
         boolean statusChanged =
-                !java.util.Objects.equals(existing.getStatus(), stageDetails.getStatus());
+                stageDetails.getStatus() != null
+                        && !java.util.Objects.equals(
+                                existing.getStatus(), stageDetails.getStatus());
         // Update requests may contain only the changed fields (for example, status).
         // Keep required and unrelated values when they are omitted from the payload.
         if (stageDetails.getTitle() != null) existing.setTitle(stageDetails.getTitle());
         if (stageDetails.isStartDateProvided()) existing.setStartDate(stageDetails.getStartDate());
         if (stageDetails.isEndDateProvided()) existing.setEndDate(stageDetails.getEndDate());
         if (stageDetails.getStatus() != null) existing.setStatus(stageDetails.getStatus());
+        if (stageDetails.isGoalProvided())
+            existing.setGoal(EngineeringText.optional(stageDetails.getGoal()));
+        if (stageDetails.isExpectedOutputProvided())
+            existing.setExpectedOutput(EngineeringText.optional(stageDetails.getExpectedOutput()));
+        if (stageDetails.isExitCriteriaProvided())
+            existing.setExitCriteria(EngineeringText.optional(stageDetails.getExitCriteria()));
         existing.setUpdatedAt(LocalDateTime.now());
         Stage saved = stageRepository.save(existing);
         activityLogService.record(

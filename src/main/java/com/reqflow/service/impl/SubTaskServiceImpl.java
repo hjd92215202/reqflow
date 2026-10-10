@@ -1,10 +1,12 @@
 package com.reqflow.service.impl;
 
+import com.reqflow.dto.SubTaskUpdateRequest;
 import com.reqflow.entity.SubTask;
 import com.reqflow.repository.SubTaskRepository;
 import com.reqflow.service.ActivityLogService;
 import com.reqflow.service.RequirementAccessService;
 import com.reqflow.service.SubTaskService;
+import com.reqflow.util.EngineeringText;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,11 @@ public class SubTaskServiceImpl implements SubTaskService {
         requirementAccessService.requireStageOwner(subTask.getStageId(), userId);
         requirementAccessService.requireParentTaskInStage(
                 subTask.getParentId(), subTask.getStageId());
+        // Creation must never merge into a client-selected existing row.
+        subTask.setId(null);
         if (subTask.getStatus() == null) subTask.setStatus("TODO");
+        subTask.setDeliverable(EngineeringText.optional(subTask.getDeliverable()));
+        subTask.setCompletionCriteria(EngineeringText.optional(subTask.getCompletionCriteria()));
         SubTask saved = subTaskRepository.save(subTask);
         Long requirementId = activityLogService.resolveRequirementIdForStage(saved.getStageId());
         activityLogService.record(
@@ -48,24 +54,37 @@ public class SubTaskServiceImpl implements SubTaskService {
 
     @Override
     @Transactional
-    public SubTask updateSubTask(Long id, SubTask subTaskDetails, Long userId) {
+    public SubTask updateSubTask(Long id, SubTaskUpdateRequest subTaskDetails, Long userId) {
         requirementAccessService.requireSubTaskOwner(id, userId);
         var existing =
                 subTaskRepository
                         .findById(id)
                         .orElseThrow(() -> new RuntimeException("SubTask not found"));
         boolean statusChanged =
-                !java.util.Objects.equals(existing.getStatus(), subTaskDetails.getStatus());
-        existing.setTitle(subTaskDetails.getTitle());
-        existing.setAssignee(subTaskDetails.getAssignee());
-        existing.setStatus(subTaskDetails.getStatus());
-        existing.setStartDate(subTaskDetails.getStartDate());
-        existing.setEndDate(subTaskDetails.getEndDate());
+                subTaskDetails.getStatus() != null
+                        && !java.util.Objects.equals(
+                                existing.getStatus(), subTaskDetails.getStatus());
+        if (subTaskDetails.getTitle() != null) existing.setTitle(subTaskDetails.getTitle());
+        if (subTaskDetails.isAssigneeProvided()) existing.setAssignee(subTaskDetails.getAssignee());
+        if (subTaskDetails.getStatus() != null) existing.setStatus(subTaskDetails.getStatus());
+        if (subTaskDetails.isStartDateProvided())
+            existing.setStartDate(subTaskDetails.getStartDate());
+        if (subTaskDetails.isEndDateProvided()) existing.setEndDate(subTaskDetails.getEndDate());
         // Preserve notes when older clients update a task without sending this field.
-        if (subTaskDetails.getNote() != null) {
+        if (subTaskDetails.isNoteProvided()) {
             existing.setNote(subTaskDetails.getNote());
         }
-        existing.setCustomFields(subTaskDetails.getCustomFields());
+        if (subTaskDetails.isCustomFieldsProvided()) {
+            existing.setCustomFields(
+                    subTaskDetails.getCustomFields() == null
+                            ? new java.util.HashMap<>()
+                            : subTaskDetails.getCustomFields());
+        }
+        if (subTaskDetails.isDeliverableProvided())
+            existing.setDeliverable(EngineeringText.optional(subTaskDetails.getDeliverable()));
+        if (subTaskDetails.isCompletionCriteriaProvided())
+            existing.setCompletionCriteria(
+                    EngineeringText.optional(subTaskDetails.getCompletionCriteria()));
         existing.setUpdatedAt(LocalDateTime.now());
         SubTask saved = subTaskRepository.save(existing);
         Long requirementId = activityLogService.resolveRequirementIdForTask(id);

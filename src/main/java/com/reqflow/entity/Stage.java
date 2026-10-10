@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Data
 @Entity
+@DynamicUpdate
 @Table(name = "req_stage")
 public class Stage {
     @Id
@@ -18,6 +20,15 @@ public class Stage {
 
     @Column(nullable = false)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
+    private String goal;
+
+    @Column(name = "expected_output", columnDefinition = "TEXT")
+    private String expectedOutput;
+
+    @Column(name = "exit_criteria", columnDefinition = "TEXT")
+    private String exitCriteria;
 
     @Column(name = "start_date")
     private LocalDate startDate;

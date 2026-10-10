@@ -90,7 +90,13 @@ mvn clean spring-boot:run
 
 保存请求为 `{ "version": 0, "definition": { "problemStatement": "问题", "targetOutcome": "目标", "constraints": [], "assumptions": [], "outOfScope": [], "successCriteria": [] } }`。确认请求为 `{ "version": 1 }`；版本不匹配返回 409，问题、目标和成功标准不完整时不能确认。完整内容变更使原确认失效，确认身份由服务端取得。
 
-运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5 存量升级、JSONB 读写及并发保护，不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
+### 工程成长闭环：阶段与任务标准
+
+新增 `V1.0.7__execution_standards.sql`：阶段可选 `goal`、`expectedOutput`、`exitCriteria`，任务可选 `deliverable`、`completionCriteria`；新列均为 nullable TEXT，旧记录保持为空。
+
+沿用阶段和子任务 CRUD；PUT 省略新字段保留原值，显式 null/空串/纯空白清空，其余文本裁剪首尾空白，各最多 10000 个 UTF-16 字符。SubTask PUT 使用局部更新 DTO，省略日期、负责人、备注、自定义字段也保留；不可借此修改所属阶段或父任务。所有接口沿用需求访问权限。空标准不影响 DONE；普通待办更新和旧实体并发保存保留标准。能力接口返回 `executionStandards: 1`，前端据此开放入口；同一标准多客户端编辑以最后写入为准。
+
+运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5 存量需求/阶段/任务升级至 V1.0.7、JSONB 读写、标准 CRUD、权限、显式清空、待办兼容及并发保护，不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
 
 ---
 

@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class CapabilityController {
     @GetMapping("/api/capabilities")
     public Map<String, Object> get() {
-        return Map.of("requirementDefinition", 1);
+        return Map.of("requirementDefinition", 1, "executionStandards", 1);
     }
 }

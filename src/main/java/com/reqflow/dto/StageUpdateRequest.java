@@ -1,5 +1,6 @@
 package com.reqflow.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -10,8 +11,32 @@ public class StageUpdateRequest {
     private LocalDate startDate;
     private LocalDate endDate;
     private String status;
-    private boolean startDateProvided;
-    private boolean endDateProvided;
+    @JsonIgnore private boolean startDateProvided;
+    @JsonIgnore private boolean endDateProvided;
+    private String goal;
+    private String expectedOutput;
+    private String exitCriteria;
+    @JsonIgnore private boolean goalProvided;
+    @JsonIgnore private boolean expectedOutputProvided;
+    @JsonIgnore private boolean exitCriteriaProvided;
+
+    @JsonSetter("goal")
+    public void setGoal(String goal) {
+        this.goal = goal;
+        this.goalProvided = true;
+    }
+
+    @JsonSetter("expectedOutput")
+    public void setExpectedOutput(String expectedOutput) {
+        this.expectedOutput = expectedOutput;
+        this.expectedOutputProvided = true;
+    }
+
+    @JsonSetter("exitCriteria")
+    public void setExitCriteria(String exitCriteria) {
+        this.exitCriteria = exitCriteria;
+        this.exitCriteriaProvided = true;
+    }
 
     @JsonSetter("title")
     public void setTitle(String title) {
