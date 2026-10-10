@@ -104,7 +104,17 @@ mvn clean spring-boot:run
 
 需求创建人或授权项目成员可读写；跨需求阶段/任务关联被拒绝，客户端不能改作者、时间或已有上下文。列表按创建时间及 ID 降序，支持 stageId/subTaskId/status 与 page/size；page 最小 0，size 裁剪至 1～100。删除阶段/任务置空对应关联 ID，保留名称快照；删除整个需求级联删除决策。没有独立删除决策接口，也不保存普通编辑的每次全文修订。
 
-运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7 存量需求/阶段/任务升级至 V1.0.8、JSONB 读写、标准 CRUD、权限、显式清空、待办兼容及并发保护，并验证决策状态、替代竞争、审计回滚、删除关联后的历史及稳定分页。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
+### 工程成长闭环：验证历史与汇总
+
+新增 `V1.0.9__verification_records.sql`，能力接口返回 `verificationRecords: 1`。路径前缀 `/api/requirements/{requirementId}/verifications` 提供 GET 分页列表、GET `/{id}`、POST 创建、POST `/{id}/void` 作废、GET `/summary` 汇总、POST `/{id}/repair-tasks` 修复任务。全部继承需求访问授权；正文只能追加，纠正录入需理由，旧结果保留。
+
+创建请求为 `{ clientRequestId, stageId?, subTaskId?, successCriterionId?, definitionVersion?, taskDeliverable?, taskCompletionCriteria?, content }`。content 包含 criterionSnapshot、method、expectedResult、actualResult、resultStatus、waiverReason、evidence 和 verifiedAt；标准、方法、实际结果必填，WAIVED 还须理由。证据支持 HTTP(S)/内部 Wiki 链接或文字说明，不上传、不自动核查。绑定标准比较定义版本及标准描述，绑定任务比较交付标准快照，作者与记录时间取自服务端。
+
+最新有效结论按服务端创建时间和 ID 降序取首条，不使用可回填的 verifiedAt。定义中的标准描述、建议方法、目标值变化/删除，以及任务交付标准变化或关联删除，在同事务内触发不可逆失效；重排、无关背景或普通状态/备注修改不失效。旧 PASS 在删除后重用 ID 或改回旧文字时也不恢复。任务级独立 PASS 不计入需求成功标准；UNVERIFIED、WAIVED 和 PASS 分开统计。汇总批量读取当前标准、任务及简短结论，不加载证据正文。
+
+作废请求 `{ reason }` 保留正文和审计；创建和修复使用规范小写 UUID clientRequestId，网络重试返回原资源，同标识不同内容返回 409。FAIL/PARTIAL/INCONCLUSIVE 的修复请求 `{ clientRequestId, stageId?, title, deliverable?, completionCriteria? }` 在原阶段或用户选定的同需求阶段创建 TODO 任务，note 与只读 repairVerificationId 保留来源。读写验证或修复不会将原任务/需求标为完成或通过。业务和审计原子提交；阶段/任务删除保留历史名称，整个需求删除级联清理。
+
+运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8 存量需求/阶段/任务/决策升级至 V1.0.9，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、权限、并发幂等及事务回滚。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
 
 ---
 

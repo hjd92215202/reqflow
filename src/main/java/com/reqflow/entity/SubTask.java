@@ -20,6 +20,15 @@ import org.hibernate.type.SqlTypes;
             @Index(name = "idx_subtask_parent_id", columnList = "parent_id")
         })
 public class SubTask {
+    @com.fasterxml.jackson.annotation.JsonProperty(
+            access = com.fasterxml.jackson.annotation.JsonProperty.Access.READ_ONLY)
+    @Column(name = "repair_verification_id")
+    private Long repairVerificationId;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "repair_request_id", length = 36)
+    private String repairRequestId;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
