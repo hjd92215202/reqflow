@@ -1,14 +1,21 @@
 package com.reqflow.repository;
 
 import com.reqflow.entity.Requirement;
+import jakarta.persistence.LockModeType;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface RequirementRepository extends JpaRepository<Requirement, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Requirement r where r.id = :id")
+    Optional<Requirement> findForDefinitionUpdate(@Param("id") Long id);
+
     List<Requirement> findByCreatorIdOrderByIdDesc(Long creatorId);
 
     Page<Requirement> findByCreatorIdOrderByIdDesc(Long creatorId, Pageable pageable);

@@ -57,7 +57,7 @@ public class ActivityLogService {
             String actionType,
             String summary) {
         Long workspaceId = resolveWorkspaceId(requirementId, userId);
-        if (workspaceId == null) {
+        if (workspaceId == null && requirementId == null) {
             return;
         }
         User user =

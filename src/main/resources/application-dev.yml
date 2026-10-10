@@ -7,7 +7,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate              # 自动检测并更新表结构，开发阶段非常实用
+      ddl-auto: validate              # Flyway 管理迁移，Hibernate 只校验表结构
     show-sql: true                  # 在控制台打印 SQL 语句，方便调试
     properties:
       hibernate:

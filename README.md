@@ -82,7 +82,15 @@ spring:
 ```bash
 mvn clean spring-boot:run
 ```
-*提示：程序利用了 Hibernate 的 `ddl-auto: update`，启动时会自动在数据库中创建所需的所有数据表。*
+*数据库结构由 Flyway 的版本化 migration 管理，Hibernate 使用 `ddl-auto: validate` 进行校验。升级前请备份并确认 `flyway_schema_history` 与当前环境配置，不要修改已经应用的 migration。*
+
+### 工程成长闭环：问题定义
+
+新增 `V1.0.6__requirement_definition.sql`，保留旧需求字段并增加结构化定义、版本和确认信息。配套前端通过 `GET /api/capabilities` 检查能力；定义提供 GET/PUT `/api/requirements/{id}/definition` 与 POST `/api/requirements/{id}/definition/confirm`，全部需要 JWT 和需求访问权限。
+
+保存请求为 `{ "version": 0, "definition": { "problemStatement": "问题", "targetOutcome": "目标", "constraints": [], "assumptions": [], "outOfScope": [], "successCriteria": [] } }`。确认请求为 `{ "version": 1 }`；版本不匹配返回 409，问题、目标和成功标准不完整时不能确认。完整内容变更使原确认失效，确认身份由服务端取得。
+
+运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5 存量升级、JSONB 读写及并发保护，不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
 
 ---
 

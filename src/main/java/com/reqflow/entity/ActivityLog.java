@@ -12,7 +12,7 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "workspace_id", nullable = false)
+    @Column(name = "workspace_id")
     private Long workspaceId;
 
     @Column(name = "requirement_id")
