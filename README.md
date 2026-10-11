@@ -114,7 +114,15 @@ mvn clean spring-boot:run
 
 作废请求 `{ reason }` 保留正文和审计；创建和修复使用规范小写 UUID clientRequestId，网络重试返回原资源，同标识不同内容返回 409。FAIL/PARTIAL/INCONCLUSIVE 的修复请求 `{ clientRequestId, stageId?, title, deliverable?, completionCriteria? }` 在原阶段或用户选定的同需求阶段创建 TODO 任务，note 与只读 repairVerificationId 保留来源。读写验证或修复不会将原任务/需求标为完成或通过。业务和审计原子提交；阶段/任务删除保留历史名称，整个需求删除级联清理。
 
-运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8 存量需求/阶段/任务/决策升级至 V1.0.9，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、权限、并发幂等及事务回滚。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
+### 工程成长闭环：活动时间线与知识
+
+新增 `V1.0.10__wiki_types_and_requests.sql`，声明 `activityTimeline: 1`、`wikiKnowledge: 1`。GET `/api/requirements/{id}/timeline` 支持 ALL/OPERATION/DECISION/VERIFICATION/KNOWLEDGE 类别及 page/size/snapshotId；按审计事件创建时间、ID 降序分页，复用首屏最大事件 ID 排除更大 ID 的新增事件。每项只返回事件摘要、批量查询的当前来源上下文/状态及可访问标识，正文仍由决策、验证或 Wiki 接口读取；旧 `/api/activities` 不变。
+
+Wiki 继续复用原 CRUD，新增可空 documentType（GENERAL/TECHNICAL_DESIGN/PITFALL/RETROSPECTIVE/CHANGELOG/EXPERIMENT/PRACTICE/OTHER）。旧文档保持未分类；旧 PUT 未提供类型时不清空，显式 null 清空。读取和修改关联 Wiki 继承需求权限，独立文档仅创建者可访问；列表只返回可访问文档，父文档和重新关联也验证权限。分享仍需显式获取 Token，存量分享链接和正文兼容。
+
+来源草稿在前端供用户审阅，生成不写库、不分享。POST 可带规范 UUID clientRequestId，同一创建者/标识/内容重试返回同一文档，改变内容复用标识返回 409；旧客户端不带标识仍兼容。服务端生成文档 ID、作者和时间，客户端不能创建已分享文档。关联文档创建/更新/解除关联/删除与审计原子提交。
+
+运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8/V1.0.9 存量需求/阶段/任务/决策/Wiki 升级至 V1.0.10，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、Wiki 类型/权限/分享兼容、时间线筛选/分页、并发幂等及事务回滚。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
 
 ---
 

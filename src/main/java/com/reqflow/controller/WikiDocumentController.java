@@ -129,14 +129,21 @@ public class WikiDocumentController {
 
     // 4. 常规增删改查接口
     @GetMapping("/api/wikis")
-    public ResponseEntity<?> getWikis(@RequestParam(required = false) Long requirementId) {
-        return ResponseEntity.ok(wikiDocumentService.getWikiDocuments(requirementId));
+    public ResponseEntity<?> getWikis(
+            @RequestParam(required = false) Long requirementId, HttpServletRequest request) {
+        return ResponseEntity.ok(
+                wikiDocumentService.getWikiDocuments(
+                        requirementId, (Long) request.getAttribute("userId")));
     }
 
     @GetMapping("/api/wikis/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+    public ResponseEntity<?> getById(@PathVariable Long id, HttpServletRequest request) {
         try {
-            return ResponseEntity.ok(wikiDocumentService.getWikiDocumentById(id));
+            return ResponseEntity.ok(
+                    wikiDocumentService.getWikiDocumentById(
+                            id, (Long) request.getAttribute("userId")));
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

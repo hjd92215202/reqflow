@@ -1,11 +1,14 @@
 package com.reqflow.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.Data;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Data
 @Entity
+@DynamicUpdate
 @Table(
         name = "req_wiki_document",
         indexes = {
@@ -31,6 +34,23 @@ public class WikiDocument {
     private String content;
 
     private String tags;
+
+    @Column(name = "document_type", length = 32)
+    private String documentType;
+
+    @Transient @JsonIgnore private boolean documentTypeProvided;
+
+    public void setDocumentType(String value) {
+        documentType = value;
+        documentTypeProvided = true;
+    }
+
+    @Column(name = "client_request_id", length = 36)
+    private String clientRequestId;
+
+    @JsonIgnore
+    @Column(name = "request_fingerprint", length = 64)
+    private String requestFingerprint;
 
     @Column(name = "creator_id", nullable = false)
     private Long creatorId;

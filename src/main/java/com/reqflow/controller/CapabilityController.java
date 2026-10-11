@@ -16,6 +16,10 @@ public class CapabilityController {
                 "decisionRecords",
                 1,
                 "verificationRecords",
+                1,
+                "activityTimeline",
+                1,
+                "wikiKnowledge",
                 1);
     }
 }

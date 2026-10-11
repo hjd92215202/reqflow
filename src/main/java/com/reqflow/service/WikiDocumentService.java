@@ -4,9 +4,9 @@ import com.reqflow.entity.WikiDocument;
 import java.util.List;
 
 public interface WikiDocumentService {
-    List<WikiDocument> getWikiDocuments(Long requirementId);
+    List<WikiDocument> getWikiDocuments(Long requirementId, Long userId);
 
-    WikiDocument getWikiDocumentById(Long id);
+    WikiDocument getWikiDocumentById(Long id, Long userId);
 
     WikiDocument createWikiDocument(WikiDocument document, Long userId);
 
