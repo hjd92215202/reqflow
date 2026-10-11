@@ -322,7 +322,7 @@ public class DecisionService {
         entity.setAiAssistance(content.aiAssistance());
     }
 
-    private DecisionResponse response(DecisionRecord entity) {
+    DecisionResponse response(DecisionRecord entity) {
         return new DecisionResponse(
                 entity.getId(),
                 entity.getRequirementId(),

@@ -449,7 +449,7 @@ public class VerificationService {
         return value;
     }
 
-    private VerificationResponse response(VerificationRecord e) {
+    VerificationResponse response(VerificationRecord e) {
         return new VerificationResponse(
                 e.getId(),
                 e.getRequirementId(),

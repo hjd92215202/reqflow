@@ -173,7 +173,7 @@ public class RequirementTimelineService {
                                                                     w.getRequirementId());
                                             status = available ? w.getDocumentType() : null;
                                         }
-                                        case "REQUIREMENT" ->
+                                        case "CLOSEOUT", "REQUIREMENT" ->
                                                 available = requirement.equals(e.getTargetId());
                                         default -> {}
                                     }

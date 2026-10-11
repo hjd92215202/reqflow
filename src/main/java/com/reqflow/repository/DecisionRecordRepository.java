@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface DecisionRecordRepository
         extends JpaRepository<DecisionRecord, Long>, JpaSpecificationExecutor<DecisionRecord> {
+    java.util.List<DecisionRecord> findByRequirementIdOrderByIdAsc(Long requirementId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from DecisionRecord d where d.id = :id and d.requirementId = :requirementId")
     Optional<DecisionRecord> findForUpdate(

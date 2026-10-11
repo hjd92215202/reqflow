@@ -122,7 +122,19 @@ Wiki 继续复用原 CRUD，新增可空 documentType（GENERAL/TECHNICAL_DESIGN
 
 来源草稿在前端供用户审阅，生成不写库、不分享。POST 可带规范 UUID clientRequestId，同一创建者/标识/内容重试返回同一文档，改变内容复用标识返回 409；旧客户端不带标识仍兼容。服务端生成文档 ID、作者和时间，客户端不能创建已分享文档。关联文档创建/更新/解除关联/删除与审计原子提交。
 
-运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8/V1.0.9 存量需求/阶段/任务/决策/Wiki 升级至 V1.0.10，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、Wiki 类型/权限/分享兼容、时间线筛选/分页、并发幂等及事务回滚。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过。
+### 工程成长闭环：收尾检查与整体复盘
+
+新增 `V1.0.11__requirement_closeout.sql`，能力为 `requirementCloseout: 1`。GET `/api/requirements/{id}/closeout` 只读取当前事实及收尾；PUT 同路径保存不完整草稿，POST `/complete` 确认收尾，POST `/reopen` 保留内容并重新打开。读写继承需求创建人/项目成员授权，不自动改变需求状态。
+
+保存/确认请求 `{ version, factsToken, content }`，content 包含 outcome、conclusion、dispositions（key/handling/reason）、nextActions、aiUse、humanJudgment、wikiDocumentId；重开只传 version。结论为 ACHIEVED/PARTIAL/NOT_ACHIEVED/INCONCLUSIVE，处理方式为 CONTINUE_FIX/ACCEPT_RISK/CANCEL_GOAL/KEEP_OPEN。完成须有总结、结论及每个当前未解决项的处理理由，验证失败也可在人工处置后收尾。只关联已保存且属于当前需求的 Wiki ID，不复制正文；确认身份与时间由服务端取得。
+
+响应 `{ requirementId, record, facts, factsToken, needsReview }`；NOT_STARTED/DRAFT/COMPLETE 与需求状态独立。事实含定义/确认、任务、标准验证汇总、决策、最新有效验证、问题清单和 Wiki 标题/类型。无记录或豁免不视为通过，任务 DONE 不证明标准达成；拟议决策与 UTC 当日及之前到期的已采纳决策提示处理。
+
+版本或事实令牌过期返回 409，已完成须先重开；同内容保存/完成及立即重开重试不重复写审计。需求、阶段、任务、决策、验证及选定 Wiki 的事实修改在同事务内增加修订号，改回旧内容也不恢复旧确认；分享 Token/单独更新时间不触发复核。Wiki 删除置空关联，删除整个需求清理收尾/修订号。记录与 CLOSEOUT_SAVE/COMPLETE/REOPEN 审计原子提交，时间线通过操作类别定位收尾。
+
+整体复盘由前端基于 GET 返回的已有事实生成待审阅 Markdown，保留来源、未知项和人工补充提示，不调用外部 AI、不创建或分享文档；用户在 Wiki 编辑器显式保存后才关联收尾。
+
+运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8/V1.0.9/V1.0.10 存量需求/阶段/任务/决策/Wiki 升级至 V1.0.11，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、Wiki 类型/权限/分享兼容、时间线筛选/分页、并发幂等、收尾处置/复核/重开及事务回滚。当前共 45 项测试，其中 34 项真实 PostgreSQL 集成测试。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过，不视为迁移验收完成。
 
 ---
 

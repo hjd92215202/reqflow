@@ -20,6 +20,8 @@ public class CapabilityController {
                 "activityTimeline",
                 1,
                 "wikiKnowledge",
+                1,
+                "requirementCloseout",
                 1);
     }
 }
