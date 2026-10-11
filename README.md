@@ -134,7 +134,9 @@ Wiki 继续复用原 CRUD，新增可空 documentType（GENERAL/TECHNICAL_DESIGN
 
 整体复盘由前端基于 GET 返回的已有事实生成待审阅 Markdown，保留来源、未知项和人工补充提示，不调用外部 AI、不创建或分享文档；用户在 Wiki 编辑器显式保存后才关联收尾。
 
-运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8/V1.0.9/V1.0.10 存量需求/阶段/任务/决策/Wiki 升级至 V1.0.11，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、Wiki 类型/权限/分享兼容、时间线筛选/分页、并发幂等、收尾处置/复核/重开及事务回滚。当前共 45 项测试，其中 34 项真实 PostgreSQL 集成测试。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过，不视为迁移验收完成。
+运行 `mvn verify` 执行测试、打包与格式检查。数据库集成测试需要 Docker，使用隔离 PostgreSQL 容器演练 V1.0.5/V1.0.7/V1.0.8/V1.0.9/V1.0.10 存量需求/阶段/任务/决策/Wiki 升级至 V1.0.11，并验证标准、决策、验证顺序/汇总/不可逆失效/作废/修复、Wiki 类型/权限/分享兼容、时间线筛选/分页、并发幂等、收尾处置/复核/重开及事务回滚。当前共 48 项测试，其中 37 项真实 PostgreSQL 集成测试。不连接配置中的远程开发数据库；没有 Docker 时数据库测试会明确跳过，不视为迁移验收完成。
+
+M7 新增真实 TCP/注册登录鉴权的 `EngineeringGrowthHttpIntegrationTest` 完整闭环，以及 `EngineeringGrowthLegacyMigrationTest` 的父子任务、依赖、待办、Wiki 分享和旧 payload 升级兼容检查。上线顺序、实际环境核查、功能关闭与恢复限制见[升级与迁移指引](docs/engineering-growth-upgrade.md)，AC-01～18 及本机界面证据见[前端验收报告](https://github.com/hjd92215202/reqflow-ui/blob/dev/docs/engineering-growth-acceptance.md)。技术验收通过，应用尚未发布；真实用户反馈与目标环境演练仍待完成。
 
 ---
 
